@@ -92,10 +92,9 @@ export function LicenseLookupModal() {
     "ElevenLabs + RVC v2 AI Ses Klonlama"
   );
   const [newAdUrl, setNewAdUrl] = useState("https://ay.live/tr-dublaj-yeni");
-  const [newHostProvider, setNewHostProvider] = useState("Google Drive");
-  const [newHostUrl, setNewHostUrl] = useState(
-    "https://drive.google.com/drive/folders/tr-dublaj"
-  );
+  const [newHostMirrors, setNewHostMirrors] = useState<HostMirrorItem[]>([
+    { provider: "Google Drive", url: "https://drive.google.com/drive/folders/tr-dublaj", label: "Google Drive" },
+  ]);
   const [newGithubUrl, setNewGithubUrl] = useState(
     "https://github.com/tr-dublaj/releases"
   );
@@ -193,6 +192,25 @@ export function LicenseLookupModal() {
     }
   };
 
+  const addMirror = () => {
+    setNewHostMirrors((prev) => [
+      ...prev,
+      { provider: "Google Drive", url: "", label: "Yeni Barındırıcı" },
+    ]);
+  };
+
+  const removeMirror = (index: number) => {
+    setNewHostMirrors((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateMirrorField = (index: number, field: keyof HostMirrorItem, value: string) => {
+    setNewHostMirrors((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
   const handleCreatePatch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newGameTitle.trim()) return;
@@ -208,8 +226,7 @@ export function LicenseLookupModal() {
           fileSize: newFileSize,
           aiModelInfo: newAiModel,
           adShortlinkUrl: newAdUrl,
-          hostProvider: newHostProvider,
-          hostUrl: newHostUrl,
+          hostMirrors: newHostMirrors,
           githubUrl: newGithubUrl,
           coverImage: newCoverImage,
           subtitle: newSubtitle,
@@ -219,8 +236,10 @@ export function LicenseLookupModal() {
         showToast(`${newGameTitle} AI Dublaj yaması eklendi!`);
         setNewGameTitle("");
         setNewSubtitle("");
+        setNewHostMirrors([
+          { provider: "Google Drive", url: "", label: "Yeni Barındırıcı" },
+        ]);
         await fetchProductsForAdmin();
-        window.location.reload();
       } else {
         const data = await res.json();
         showToast(data.error || "Yama eklenemedi.");
@@ -714,45 +733,50 @@ export function LicenseLookupModal() {
                             className="w-full h-10 px-3 rounded-xl bg-[#13151C] border border-[#F59E0B]/30 font-mono text-xs text-[#F8FAFC]"
                           />
                         </div>
-                        <div>
-                          <label className="block font-mono text-[11px] uppercase text-[#10B981] mb-1">
-                            Ana Barındırıcı
-                          </label>
-                          <select
-                            value={newHostProvider}
-                            onChange={(e) => setNewHostProvider(e.target.value)}
-                            className="w-full h-10 px-3 rounded-xl bg-[#13151C] border border-[#10B981]/30 font-mono text-xs text-[#F8FAFC]"
-                          >
-                            <option value="Google Drive">Google Drive</option>
-                            <option value="MediaFire">MediaFire</option>
-                            <option value="Mega.nz">Mega.nz</option>
-                            <option value="Pixeldrain">Pixeldrain</option>
-                          </select>
-                        </div>
-                      </div>
-
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block font-mono text-[11px] uppercase text-[#10B981] mb-1">
-                            🔒 Barındırıcı İndirme Linki (Gizli)
+                            🔒 Barındırıcıları
                           </label>
-                          <input
-                            type="text"
-                            value={newHostUrl}
-                            onChange={(e) => setNewHostUrl(e.target.value)}
-                            className="w-full h-10 px-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC]"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1">
-                            🔒 GitHub Releases Yedek (Gizli)
-                          </label>
-                          <input
-                            type="text"
-                            value={newGithubUrl}
-                            onChange={(e) => setNewGithubUrl(e.target.value)}
-                            className="w-full h-10 px-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC]"
-                          />
+                          <div className="space-y-2">
+                            {newHostMirrors.map((mirror, i) => (
+                              <div key={i} className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Sağlayıcı (örn. Gofile)"
+                                  value={mirror.provider}
+                                  onChange={(e) =>
+                                    updateMirrorField(i, "provider", e.target.value)
+                                  }
+                                  className="flex-1 h-10 px-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="İndirme linki"
+                                  value={mirror.url}
+                                  onChange={(e) =>
+                                    updateMirrorField(i, "url", e.target.value)
+                                  }
+                                  className="flex-2 h-10 px-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeMirror(i)}
+                                  disabled={newHostMirrors.length === 1}
+                                  className="h-10 px-3 rounded-xl bg-[#EF4444]/15 border border-[#EF4444]/30 text-[#EF4444] text-xs hover:bg-[#EF4444]/30 transition"
+                                >
+                                  Sil
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={addMirror}
+                              className="w-full h-9 px-3 rounded-lg bg-[#13151C] border border-[#F59E0B]/30 text-[#F59E0B] text-xs font-mono hover:bg-[#F59E0B]/10 transition"
+                            >
+                              <Plus className="w-3 h-3" /> Barındırıcı Ekle
+                            </button>
+                          </div>
                         </div>
                       </div>
 
