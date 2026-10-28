@@ -51,7 +51,7 @@ export default function YonetimClient() {
     description: "",
     status: "ready",
     cover_image: "",
-    gallery_images: [],
+    gallery_images: [] as any[],
     host_mirrors: [] as Mirror[],
     price: 0,
     version: "",
