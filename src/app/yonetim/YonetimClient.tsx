@@ -1,5 +1,6 @@
 "use client";
 
+import CoverImageInput from "./CoverImageInput";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -256,7 +257,7 @@ export default function YonetimClient() {
                 </tr>
               ))}
               {products.length === 0 && (
-                <tr><td colSpan="4" className="px-6 py-10 text-center text-[#94A3B8] font-mono text-xs">Ürün bulunamadı.</td></tr>
+                <tr><td colSpan={4} className="px-6 py-10 text-center text-[#94A3B8] font-mono text-xs">Ürün bulunamadı.</td></tr>
               )}
             </tbody>
           </table>
