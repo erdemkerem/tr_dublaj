@@ -31,7 +31,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "tr_dublaj | Yapay Zeka (AI) Türkçe Oyun Dublaj & Ücretsiz Yama Merkezi",
   description:
-    "Resonance: A Plague Tale Legacy ve diğer oyunlar için RVC v2 + ElevenLabs yapay zeka (AI) ses klonlama ile hazırlanan %100 ücretsiz Türkçe dublaj yamaları. Google ile üye ol, reklam geç ve barındırıcıdan indir.",
+    "Resonance: A Plague Tale Legacy ve diğer oyunlar için RVC v2 + Tr_dublaj yapay zeka (AI) ses klonlama ile hazırlanan %100 ücretsiz Türkçe dublaj yamaları. Google ile üye ol, reklam geç ve barındırıcıdan indir.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

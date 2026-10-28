@@ -89,7 +89,7 @@ export function LicenseLookupModal() {
   const [newVersion, setNewVersion] = useState("v1.0-AI");
   const [newFileSize, setNewFileSize] = useState("2.5 GB");
   const [newAiModel, setNewAiModel] = useState(
-    "ElevenLabs + RVC v2 AI Ses Klonlama"
+    "Tr_dublaj AI Ses Klonlama"
   );
   const [newAdUrl, setNewAdUrl] = useState("https://ay.live/tr-dublaj-yeni");
   const [newHostMirrors, setNewHostMirrors] = useState<HostMirrorItem[]>([

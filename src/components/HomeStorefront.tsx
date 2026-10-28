@@ -228,7 +228,7 @@ export function HomeStorefront({
               </h1>
 
               <p className="text-base sm:text-lg text-[#94A3B8] max-w-[62ch] leading-relaxed">
-                Stüdyo değil, <strong className="text-[#F8FAFC]">RVC v2 ve ElevenLabs Yapay Zekâ Ses Klonlama</strong> ile karakterlerin orijinal ses tonu korunarak hazırlandı! Şu anda{" "}
+                Stüdyo değil, <strong className="text-[#F8FAFC]">RVC v2 ve Tr_dublaj Yapay Zekâ Ses Klonlama</strong> ile karakterlerin orijinal ses tonu korunarak hazırlandı! Şu anda{" "}
                 <strong className="text-[#10B981]">
                   Resonance: A Plague Tale Legacy
                 </strong>{" "}
@@ -330,7 +330,7 @@ export function HomeStorefront({
                     className="inline-flex items-center gap-1.5 text-[#F8FAFC] hover:text-[#10B981] underline cursor-pointer"
                   >
                     <LogIn className="w-3.5 h-3.5 text-[#10B981]" />
-                    <span>Oyuncu Üyeliği: Google ile Otomatik Bağlan</span>
+                    <span>Üye Girişi</span>
                   </button>
                 ) : (
                   <span className="text-[#10B981]">
@@ -346,7 +346,7 @@ export function HomeStorefront({
                       className="inline-flex items-center gap-1.5 text-[#F59E0B] hover:underline cursor-pointer"
                     >
                       <Settings className="w-3.5 h-3.5" />
-                      <span>Yeni Oyun Ekle (Kolay Kontrol Paneli)</span>
+                      <span>Yönetim Paneli</span>
                     </button>
                   </>
                 )}
@@ -746,7 +746,7 @@ export function HomeStorefront({
               1. Yapay Zeka (AI) Orijinal Ses Klonlama
             </h3>
             <p className="text-xs sm:text-sm text-[#94A3B8] leading-relaxed">
-              Stüdyo yerine RVC v2, ElevenLabs ve XTTS-v2 yapay zekâ modelleriyle oyunun kendi karakter seslerini klonluyoruz. Böylece Sophia gibi karakterler kendi orijinal ses rengiyle Türkçe konuşuyor.
+              Stüdyo yerine RVC v2, Tr_dublaj ve XTTS-v2 yapay zekâ modelleriyle oyunun kendi karakter seslerini klonluyoruz. Böylece Sophia gibi karakterler kendi orijinal ses rengiyle Türkçe konuşuyor.
             </p>
           </div>
 

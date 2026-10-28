@@ -23,7 +23,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-[#94A3B8] leading-relaxed max-w-md">
-              Yapay zekâ (RVC v2, ElevenLabs, XTTS) ses klonlama teknolojisiyle hazırladığımız Türkçe oyun dublajlarını; oyunculara %100 ücretsiz, reklam tıklama destekli ve doğrudan bulut barındırıcı (Google Drive / GitHub Releases / MediaFire) yönlendirmesiyle sunuyoruz.
+              Yapay zekâ (RVC v2, Tr_dublaj, XTTS) ses klonlama teknolojisiyle hazırladığımız Türkçe oyun dublajlarını; oyunculara %100 ücretsiz, reklam tıklama destekli ve doğrudan bulut barındırıcı (Google Drive / GitHub Releases / MediaFire) yönlendirmesiyle sunuyoruz.
             </p>
             <div className="flex flex-wrap items-center gap-2 pt-1 font-mono text-[11px]">
               <span className="px-2.5 py-1 rounded-lg bg-[#13151C] border border-white/10 text-[#10B981]">
@@ -110,7 +110,7 @@ export function Footer() {
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#0B0C10] text-xs font-display font-extrabold cursor-pointer"
               >
                 <LogIn className="w-3.5 h-3.5 text-[#E11D48]" />
-                <span>Google ile Üye Ol</span>
+                <span>Üye Ol</span>
               </button>
               {isAdmin && (
                 <button
@@ -119,7 +119,7 @@ export function Footer() {
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#13151C] hover:bg-[#1C1F2B] border border-[#F59E0B]/40 text-xs font-mono text-[#F59E0B] cursor-pointer"
                 >
                   <Settings className="w-3.5 h-3.5" />
-                  <span>Yama Yönetimi (Kolay Panel)</span>
+                  <span>Yönetim Paneli</span>
                 </button>
               )}
             </div>
