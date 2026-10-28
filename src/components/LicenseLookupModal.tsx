@@ -23,7 +23,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
-import type { Product } from "@/db/schema";
+import type { Product, HostMirrorItem } from "@/db/schema";
 
 const MAIL_PROVIDERS = [
   {
@@ -66,7 +66,6 @@ export function LicenseLookupModal() {
     showToast,
   } = useStore();
 
-  // ---- Üye giriş state ----
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [provider, setProvider] =
@@ -75,8 +74,7 @@ export function LicenseLookupModal() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [consentError, setConsentError] = useState(false);
 
-  // ---- Admin panel state ----
-  const [adminTab, setAdminTab] = useState<"add" | "manage" | "github">("add");
+  const [adminTab, setAdminTab] = useState<"add" | "manage" | "backup">("add");
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [keyInput, setKeyInput] = useState("");
@@ -88,16 +86,11 @@ export function LicenseLookupModal() {
   );
   const [newVersion, setNewVersion] = useState("v1.0-AI");
   const [newFileSize, setNewFileSize] = useState("2.5 GB");
-  const [newAiModel, setNewAiModel] = useState(
-    "Tr_dublaj AI Ses Klonlama"
-  );
+  const [newAiModel, setNewAiModel] = useState("Tr_dublaj AI Ses Klonlama");
   const [newAdUrl, setNewAdUrl] = useState("https://ay.live/tr-dublaj-yeni");
   const [newHostMirrors, setNewHostMirrors] = useState<HostMirrorItem[]>([
     { provider: "Google Drive", url: "https://drive.google.com/drive/folders/tr-dublaj", label: "Google Drive" },
   ]);
-  const [newGithubUrl, setNewGithubUrl] = useState(
-    "https://github.com/tr-dublaj/releases"
-  );
   const [newCoverImage, setNewCoverImage] = useState("");
   const [newSubtitle, setNewSubtitle] = useState("");
   const [savingPatch, setSavingPatch] = useState(false);
@@ -140,7 +133,6 @@ export function LicenseLookupModal() {
   const handleProviderAuth = async (
     selected: (typeof MAIL_PROVIDERS)[number]["id"]
   ) => {
-    // Sözleşme onayı olmadan üyelik açılamaz
     if (!termsAccepted) {
       setConsentError(true);
       showToast(
@@ -154,17 +146,13 @@ export function LicenseLookupModal() {
     try {
       const found = MAIL_PROVIDERS.find((p) => p.id === selected);
       const typed = email.trim().toLowerCase();
-
-      // E-posta yazılmadıysa otomatik bir üye adresi üretilir (tek tık ile giriş).
       const finalEmail = typed.includes("@")
         ? typed
         : `oyuncu${Math.floor(1000 + Math.random() * 9000)}@${
             found?.domain || "gmail.com"
           }`;
-
       const finalName =
         name.trim() || finalEmail.split("@")[0].replace(/[._-]/g, " ");
-
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -227,7 +215,6 @@ export function LicenseLookupModal() {
           aiModelInfo: newAiModel,
           adShortlinkUrl: newAdUrl,
           hostMirrors: newHostMirrors,
-          githubUrl: newGithubUrl,
           coverImage: newCoverImage,
           subtitle: newSubtitle,
         }),
@@ -289,7 +276,7 @@ export function LicenseLookupModal() {
         }),
       });
       if (res.ok) {
-        showToast("Reklam ve barındırıcı linkleri güncellendi!");
+        showToast("Linkler güncellendi!");
         await fetchProductsForAdmin();
       }
     } catch {
@@ -312,31 +299,31 @@ export function LicenseLookupModal() {
     }
   };
 
-  const handleCopyGithubJson = () => {
+  const handleCopyBackupJson = () => {
     navigator.clipboard.writeText(JSON.stringify(productsList, null, 2));
     setCopiedJson(true);
-    showToast("GitHub patches.json verisi kopyalandı!");
+    showToast("Yedek verisi kopyalandı!");
     setTimeout(() => setCopiedJson(false), 2000);
   };
 
-  const handleDownloadGithubJson = () => {
+  const handleDownloadBackupJson = () => {
     const blob = new Blob([JSON.stringify(productsList, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "tr_dublaj_github_patches.json";
+    a.download = "tr_dublaj_backup.json";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast("patches.json indirildi!");
+    showToast("yedek.json indirildi!");
   };
 
   return (
     <>
-      {/* ============ ÜYE GİRİŞİ: GOOGLE / YANDEX / PROTON ============ */}
+      {/* ============ ÜYE GİRİŞİ ============ */}
       {isAuthModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div
@@ -347,7 +334,7 @@ export function LicenseLookupModal() {
             <div className="px-6 py-5 bg-[#13151C] border-b border-white/10 flex items-center justify-between">
               <div>
                 <span className="font-mono text-[10px] uppercase tracking-widest text-[#10B981]">
-                  ÜCRETSİZ & SANİYELER İÇİNDE ÜYELİK
+                  ÜCRETSİZ ÜYELİK
                 </span>
                 <h2 className="font-display text-lg font-bold text-[#F8FAFC]">
                   Google • Yandex • Proton ile Giriş
@@ -364,7 +351,6 @@ export function LicenseLookupModal() {
 
             <div className="p-6 space-y-5">
               {currentUser ? (
-                /* ---- ZATEN GİRİŞ YAPILMIŞ ---- */
                 <div className="space-y-4">
                   <div className="p-4 rounded-xl bg-[#10B981]/10 border border-[#10B981]/30 space-y-1.5">
                     <div className="flex items-center gap-2 text-sm font-bold text-[#10B981]">
@@ -408,7 +394,6 @@ export function LicenseLookupModal() {
                     dublajını ücretsiz indirebilirsin.
                   </p>
 
-                  {/* ÜYELİK SÖZLEŞMESİ ONAYI — ZORUNLU */}
                   <label
                     className={`flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all border ${
                       consentError
@@ -457,7 +442,6 @@ export function LicenseLookupModal() {
                     </div>
                   )}
 
-                  {/* TEK TIKLA GİRİŞ BUTONLARI */}
                   <div
                     className={`space-y-2.5 transition-opacity ${
                       termsAccepted ? "opacity-100" : "opacity-50"
@@ -491,7 +475,6 @@ export function LicenseLookupModal() {
                     ))}
                   </div>
 
-                  {/* İSTEĞE BAĞLI BİLGİLER */}
                   <details className="group">
                     <summary className="cursor-pointer font-mono text-[11px] uppercase text-[#94A3B8] hover:text-[#F8FAFC] select-none">
                       İsteğe bağlı: adımı ve e-postamı kendim yazayım ▾
@@ -553,7 +536,7 @@ export function LicenseLookupModal() {
                       : "Kilitli Alan — Yönetici Girişi Gerekli"}
                   </h2>
                   <p className="text-xs font-mono text-[#94A3B8]">
-                    Reklam & Barındırıcı linkleri üyelere kapalıdır
+                    İndirme linkleri üyelere kapalıdır
                   </p>
                 </div>
               </div>
@@ -567,7 +550,6 @@ export function LicenseLookupModal() {
             </div>
 
             {!isAdmin ? (
-              /* ---- ADMIN ANAHTAR KİLİDİ ---- */
               <form onSubmit={handleAdminKeyLogin} className="p-6 space-y-4">
                 <div className="p-4 rounded-xl bg-[#EF4444]/10 border border-[#EF4444]/30 text-xs text-[#EF4444] flex items-start gap-3">
                   <EyeOff className="w-5 h-5 shrink-0" />
@@ -604,7 +586,6 @@ export function LicenseLookupModal() {
               </form>
             ) : (
               <>
-                {/* ---- ADMIN SEKMELERİ ---- */}
                 <div className="grid grid-cols-3 bg-[#0B0C10] border-b border-white/10 font-mono text-xs">
                   <button
                     type="button"
@@ -630,14 +611,14 @@ export function LicenseLookupModal() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setAdminTab("github")}
+                    onClick={() => setAdminTab("backup")}
                     className={`py-3.5 px-4 font-bold border-b-2 transition-colors cursor-pointer ${
-                      adminTab === "github"
+                      adminTab === "backup"
                         ? "border-[#E11D48] text-[#F8FAFC] bg-[#13151C]"
                         : "border-transparent text-[#94A3B8] hover:text-white"
                     }`}
                   >
-                    GitHub / JSON & Çıkış
+                    Yedek & Çıkış
                   </button>
                 </div>
 
@@ -645,7 +626,7 @@ export function LicenseLookupModal() {
                   {adminTab === "add" && (
                     <form onSubmit={handleCreatePatch} className="space-y-4">
                       <div className="p-3.5 rounded-xl bg-[#10B981]/10 border border-[#10B981]/30 text-xs text-[#10B981]">
-                        Yeni bir oyunun AI dublajını bitirdiğinizde buradan 20 saniyede yayına alın. Girdiğiniz reklam ve barındırıcı linkleri <strong>şifreli şekilde sadece sunucuda</strong> tutulur.
+                        Yeni bir oyunun AI dublajını bitirdiğinizde buradan 20 saniyede yayına alın. Girdiğiniz linkler şifreli şekilde sadece sunucuda tutulur.
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -724,7 +705,7 @@ export function LicenseLookupModal() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block font-mono text-[11px] uppercase text-[#F59E0B] mb-1">
-                            🔒 Reklam Geçiş Linki (Gizli)
+                            🔒 İndirme Linki (Gizli)
                           </label>
                           <input
                             type="text"
@@ -733,7 +714,6 @@ export function LicenseLookupModal() {
                             className="w-full h-10 px-3 rounded-xl bg-[#13151C] border border-[#F59E0B]/30 font-mono text-xs text-[#F8FAFC]"
                           />
                         </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block font-mono text-[11px] uppercase text-[#10B981] mb-1">
                             🔒 Barındırıcıları
@@ -746,8 +726,7 @@ export function LicenseLookupModal() {
                                   placeholder="Sağlayıcı (örn. Gofile)"
                                   value={mirror.provider}
                                   onChange={(e) =>
-                                    updateMirrorField(i, "provider", e.target.value)
-                                  }
+                                    updateMirrorField(i, "provider", e.target.value)}
                                   className="flex-1 h-10 px-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
                                 />
                                 <input
@@ -755,8 +734,7 @@ export function LicenseLookupModal() {
                                   placeholder="İndirme linki"
                                   value={mirror.url}
                                   onChange={(e) =>
-                                    updateMirrorField(i, "url", e.target.value)
-                                  }
+                                    updateMirrorField(i, "url", e.target.value)}
                                   className="flex-2 h-10 px-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
                                 />
                                 <button
@@ -783,13 +761,13 @@ export function LicenseLookupModal() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1">
-                            Kapak Görseli URL (GitHub Releases)
+                            Kapak Görseli URL
                           </label>
                           <input
                             type="text"
                             value={newCoverImage}
                             onChange={(e) => setNewCoverImage(e.target.value)}
-                            placeholder="https://github.com/erdemkerem/tr_dublaj/releases/download/patches-v1/resonance-plague-tale.jpg"
+                            placeholder="https://example.com/resim.jpg"
                             className="w-full h-10 px-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
                           />
                         </div>
@@ -814,9 +792,7 @@ export function LicenseLookupModal() {
                       >
                         <Plus className="w-4 h-4" />
                         <span>
-                          {savingPatch
-                            ? "Ekleniyor..."
-                            : "AI Dublaj Yamasını Kaydet & Yayınla"}
+                          {savingPatch ? "Ekleniyor..." : "AI Dublaj Yamasını Kaydet & Yayınla"}
                         </span>
                       </button>
                     </form>
@@ -882,20 +858,19 @@ export function LicenseLookupModal() {
                               </div>
                             </div>
 
-                            {/* Gizli linkleri düzenleme */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-white/5">
                               <input
                                 type="text"
                                 defaultValue={prod.adShortlinkUrl}
                                 id={`ad-${prod.id}`}
-                                placeholder="🔒 Reklam linki"
+                                placeholder="🔒 İndirme linki"
                                 className="h-9 px-2.5 rounded-lg bg-[#0B0C10] border border-[#F59E0B]/30 font-mono text-[11px] text-[#F8FAFC]"
                               />
                               <input
                                 type="text"
                                 defaultValue={prod.hostMirrors?.[0]?.url || ""}
                                 id={`host-${prod.id}`}
-                                placeholder="🔒 Google Drive linki"
+                                placeholder="🔒 Barındırıcı linki"
                                 className="h-9 px-2.5 rounded-lg bg-[#0B0C10] border border-[#10B981]/30 font-mono text-[11px] text-[#F8FAFC]"
                               />
                               <button
@@ -928,26 +903,24 @@ export function LicenseLookupModal() {
                     </div>
                   )}
 
-                  {adminTab === "github" && (
+                  {adminTab === "backup" && (
                     <div className="space-y-4">
                       <div className="p-4 rounded-xl bg-[#13151C] border border-white/10 space-y-2">
                         <div className="flex items-center gap-2 font-display text-sm font-bold text-[#F8FAFC]">
                           <Sparkles className="w-4 h-4 text-[#F59E0B]" />
-                          <span>GitHub Yedekleme & Taşıma</span>
+                          <span>Yedek & Taşıma</span>
                         </div>
                         <p className="text-xs text-[#94A3B8] leading-relaxed">
                           Tüm yamalarınızı ve gizli linklerinizi{" "}
-                          <code className="text-[#10B981]">patches.json</code>{" "}
-                          olarak yedekleyin. Bu dosyayı GitHub deponuzda{" "}
-                          <strong className="text-[#F59E0B]">private</strong>{" "}
-                          tutun.
+                          <code className="text-[#10B981]">backup.json</code>{" "}
+                          olarak yedekleyin. Bu dosyayı sunucunuzda saklayabilirsiniz.
                         </p>
                       </div>
 
                       <div className="flex flex-wrap gap-3">
                         <button
                           type="button"
-                          onClick={handleCopyGithubJson}
+                          onClick={handleCopyBackupJson}
                           className="h-11 px-5 rounded-xl bg-[#1C1F2B] hover:bg-[#262B3D] text-[#F8FAFC] border border-white/15 font-mono text-xs font-bold flex items-center gap-2 cursor-pointer"
                         >
                           {copiedJson ? (
@@ -965,11 +938,11 @@ export function LicenseLookupModal() {
 
                         <button
                           type="button"
-                          onClick={handleDownloadGithubJson}
+                          onClick={handleDownloadBackupJson}
                           className="h-11 px-5 rounded-xl bg-[#10B981] text-[#0B0C10] font-mono text-xs font-extrabold flex items-center gap-2 cursor-pointer"
                         >
                           <Download className="w-4 h-4" />
-                          <span>patches.json İndir</span>
+                          <span>backup.json İndir</span>
                         </button>
 
                         <a
