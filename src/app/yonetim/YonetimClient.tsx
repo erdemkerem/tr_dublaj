@@ -1,6 +1,5 @@
 "use client";
 
-import CoverImageInput from "./CoverImageInput";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -9,10 +8,6 @@ import {
   Lock,
   Settings,
   Plus,
-  Trash2,
-  Edit3,
-  ArrowLeft,
-  LogOut,
   EyeOff,
 } from "lucide-react";
 
@@ -20,22 +15,31 @@ export type Product = {
   id: number;
   slug: string;
   title: string;
-  game_title: string;
+  gameTitle: string;
   subtitle: string;
   description: string;
   status: string;
-  cover_image: string;
-  gallery_images: any[];
-  host_mirrors: any[];
+  coverImage: string;
+  galleryImages: { url?: string; caption?: string; tag?: string }[];
+  hostMirrors: { provider?: string; url?: string; label?: string }[];
   price: number;
   version: string;
-  file_size: string;
+  fileSize: string;
 };
 
-export type Mirror = {
-  provider: string;
-  url: string;
-  label: string;
+const EMPTY_FORM = {
+  slug: "",
+  title: "",
+  gameTitle: "",
+  subtitle: "",
+  description: "",
+  status: "ready",
+  coverImage: "",
+  galleryImages: [] as Product["galleryImages"],
+  hostMirrors: [] as Product["hostMirrors"],
+  price: 0,
+  version: "",
+  fileSize: "",
 };
 
 export default function YonetimClient() {
@@ -44,20 +48,12 @@ export default function YonetimClient() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
-  const [form, setForm] = useState({
-    slug: "",
-    title: "",
-    game_title: "",
-    subtitle: "",
-    description: "",
-    status: "ready",
-    cover_image: "",
-    gallery_images: [] as any[],
-    host_mirrors: [] as Mirror[],
-    price: 0,
-    version: "",
-    file_size: "",
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  const adminHeaders = React.useMemo(
+    () => ({ "x-admin-key": key }),
+    [key]
+  );
 
   const handleKey = async () => {
     const res = await fetch("/api/admin/verify", {
@@ -74,11 +70,11 @@ export default function YonetimClient() {
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/products");
+    const res = await fetch("/api/products", { headers: adminHeaders });
     const data = await res.json();
     setProducts(Array.isArray(data) ? data : data.products || []);
     setLoading(false);
-  }, []);
+  }, [adminHeaders]);
 
   useEffect(() => {
     if (unlocked) loadProducts();
@@ -137,35 +133,29 @@ export default function YonetimClient() {
     const url = editing ? `/api/products/${editing.slug}` : "/api/products";
     const res = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...adminHeaders },
       body: JSON.stringify(form),
     });
     if (res.ok) {
       setEditing(null);
-      setForm({
-        slug: "",
-        title: "",
-        game_title: "",
-        subtitle: "",
-        description: "",
-        status: "ready",
-        cover_image: "",
-        gallery_images: [],
-        host_mirrors: [] as Mirror[],
-        price: 0,
-        version: "",
-        file_size: "",
-      });
+      setForm(EMPTY_FORM);
       loadProducts();
     } else {
-      alert("Ürün kaydedilemedi!");
+      let detail = "";
+      try {
+        detail = await res.text();
+      } catch {}
+      alert(`Ürün kaydedilemedi! (${res.status}) ${detail.slice(0, 200)}`);
     }
     setLoading(false);
   };
 
   const deleteProduct = async (slug: string) => {
     if (!confirm("Bu oyunu silmek istediğinize emin misiniz?")) return;
-    await fetch(`/api/products/${slug}`, { method: "DELETE" });
+    await fetch(`/api/products/${slug}`, {
+      method: "DELETE",
+      headers: adminHeaders,
+    });
     loadProducts();
   };
 
@@ -174,16 +164,16 @@ export default function YonetimClient() {
     setForm({
       slug: p.slug || "",
       title: p.title || "",
-      game_title: p.game_title || "",
+      gameTitle: p.gameTitle || "",
       subtitle: p.subtitle || "",
       description: p.description || "",
       status: p.status || "ready",
-      cover_image: p.cover_image || "",
-      gallery_images: p.gallery_images || [],
-      host_mirrors: p.host_mirrors || [],
+      coverImage: p.coverImage || "",
+      galleryImages: p.galleryImages || [],
+      hostMirrors: p.hostMirrors || [],
       price: p.price ?? 0,
       version: p.version || "",
-      file_size: p.file_size || "",
+      fileSize: p.fileSize || "",
     });
   };
 
@@ -210,20 +200,7 @@ export default function YonetimClient() {
           <button
             onClick={() => {
               setEditing(null);
-              setForm({
-                slug: "",
-                title: "",
-                game_title: "",
-                subtitle: "",
-                description: "",
-                status: "ready",
-                cover_image: "",
-                gallery_images: [],
-                host_mirrors: [] as Mirror[],
-                price: 0,
-                version: "",
-                file_size: "",
-              });
+              setForm(EMPTY_FORM);
             }}
             className="inline-flex items-center gap-2 h-11 px-4 rounded-xl bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-[#0B0C10] font-display font-bold text-sm cursor-pointer"
           >
@@ -244,9 +221,13 @@ export default function YonetimClient() {
               {products.map((p) => (
                 <tr key={p.id} className="hover:bg-white/5 transition">
                   <td className="px-6 py-4">
-                    <img src={p.cover_image} alt={p.title} className="w-12 h-12 rounded-lg object-cover" />
+                    {p.coverImage ? (
+                      <img src={p.coverImage} alt={p.gameTitle || p.slug} className="w-12 h-12 rounded-lg object-cover" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10" />
+                    )}
                   </td>
-                  <td className="px-6 py-4 font-display font-bold text-[#F8FAFC] truncate max-w-[200px]">{p.game_title}</td>
+                  <td className="px-6 py-4 font-display font-bold text-[#F8FAFC] truncate max-w-[200px]">{p.gameTitle}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${p.status === "ready" ? "bg-[#10B981]/20 text-[#10B981]" : "bg-[#F59E0B]/20 text-[#F59E0B]"}`}>{p.status}</span>
                   </td>
@@ -267,7 +248,7 @@ export default function YonetimClient() {
           <form onSubmit={saveProduct} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Slug</label>
+                <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Slug (sayfa adresi — düzenlerken de değiştirilebilir)</label>
                 <input name="slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} required className="w-full h-11 px-4 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]" />
               </div>
               <div>
@@ -276,7 +257,7 @@ export default function YonetimClient() {
               </div>
               <div>
                 <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Oyun Adı</label>
-                <input name="game_title" value={form.game_title} onChange={(e) => setForm({ ...form, game_title: e.target.value })} required className="w-full h-11 px-4 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]" />
+                <input name="gameTitle" value={form.gameTitle} onChange={(e) => setForm({ ...form, gameTitle: e.target.value })} required className="w-full h-11 px-4 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]" />
               </div>
               <div>
                 <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Durum</label>
@@ -288,8 +269,8 @@ export default function YonetimClient() {
               </div>
             </div>
             <div>
-              <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Capa Resim URL (GitHub Releases)</label>
-              <input name="cover_image" value={form.cover_image} onChange={(e) => setForm({ ...form, cover_image: e.target.value })} placeholder="https://github.com/erdemkerem/tr_dublaj/releases/download/patches-v1/resonance.jpg" className="w-full h-11 px-4 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]" />
+              <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Kapak Resim URL (GitHub Releases)</label>
+              <input name="coverImage" value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} placeholder="https://github.com/erdemkerem/tr_dublaj/releases/download/patches-v1/resonance.jpg" className="w-full h-11 px-4 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]" />
             </div>
             <div>
               <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Açıklama</label>
@@ -297,11 +278,11 @@ export default function YonetimClient() {
             </div>
             <div>
               <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Galeri Resimleri (JSON)</label>
-              <textarea name="gallery_images" rows={3} value={JSON.stringify(form.gallery_images, null, 2)} onChange={(e) => { try { setForm({ ...form, gallery_images: JSON.parse(e.target.value) }); } catch {} }} placeholder='[{"url":"https://github.com/.../img1.jpg","caption":"Örnek","tag":"ÖNİZLEME"}]' className="w-full p-3.5 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] font-mono focus:outline-none focus:border-[#F59E0B]" />
+              <textarea name="galleryImages" rows={3} value={JSON.stringify(form.galleryImages, null, 2)} onChange={(e) => { try { setForm({ ...form, galleryImages: JSON.parse(e.target.value) }); } catch {} }} placeholder='[{"url":"https://github.com/.../img1.jpg","caption":"Örnek","tag":"ÖNİZLEME"}]' className="w-full p-3.5 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] font-mono focus:outline-none focus:border-[#F59E0B]" />
             </div>
             <div>
               <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">İndirme Linkleri (JSON)</label>
-              <textarea name="host_mirrors" rows={3} value={JSON.stringify(form.host_mirrors, null, 2)} onChange={(e) => { try { setForm({ ...form, host_mirrors: JSON.parse(e.target.value) }); } catch {} }} placeholder='[{"provider":"GitHub Releases","url":"https://github.com/erdemkerem/tr_dublaj/releases/download/patches-v1/resonance.zip","label":"GitHub (2.8 GB)"}]' className="w-full p-3.5 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] font-mono focus:outline-none focus:border-[#F59E0B]" />
+              <textarea name="hostMirrors" rows={3} value={JSON.stringify(form.hostMirrors, null, 2)} onChange={(e) => { try { setForm({ ...form, hostMirrors: JSON.parse(e.target.value) }); } catch {} }} placeholder='[{"provider":"GitHub Releases","url":"https://github.com/erdemkerem/tr_dublaj/releases/download/patches-v1/resonance.zip","label":"GitHub (2.8 GB)"}]' className="w-full p-3.5 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] font-mono focus:outline-none focus:border-[#F59E0B]" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
@@ -310,7 +291,7 @@ export default function YonetimClient() {
               </div>
               <div>
                 <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Dosya Boyutu</label>
-                <input name="file_size" value={form.file_size} onChange={(e) => setForm({ ...form, file_size: e.target.value })} className="w-full h-11 px-4 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]" />
+                <input name="fileSize" value={form.fileSize} onChange={(e) => setForm({ ...form, fileSize: e.target.value })} className="w-full h-11 px-4 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]" />
               </div>
               <div>
                 <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Fiyat (0 = Ücretsiz)</label>
@@ -319,20 +300,7 @@ export default function YonetimClient() {
             </div>
             <div className="pt-4 border-t border-white/10 flex items-center justify-between">
               {editing && (
-                <button type="button" onClick={() => { setEditing(null); setForm({
-                  slug: "",
-                  title: "",
-                  game_title: "",
-                  subtitle: "",
-                  description: "",
-                  status: "ready",
-                  cover_image: "",
-                  gallery_images: [],
-                  host_mirrors: [] as Mirror[],
-                  price: 0,
-                  version: "",
-                  file_size: "",
-                }); }} className="h-10 px-3 rounded-lg bg-[#EF4444]/15 border border-[#EF4444]/30 text-[#EF4444] text-xs font-mono hover:bg-[#EF4444]/30 transition">İptal</button>
+                <button type="button" onClick={() => { setEditing(null); setForm(EMPTY_FORM); }} className="h-10 px-3 rounded-lg bg-[#EF4444]/15 border border-[#EF4444]/30 text-[#EF4444] text-xs font-mono hover:bg-[#EF4444]/30 transition">İptal</button>
               )}
               <button type="submit" disabled={loading} className={`h-11 px-4 rounded-xl font-display font-bold text-sm cursor-pointer disabled:opacity-60 transition ${loading ? "bg-[#6B7280]" : "bg-gradient-to-r from-[#F59E0B] to-[#D97706]"} text-[#0B0C10]`}> {loading ? "Kaydediliyor..." : editing ? "Güncelle" : "Oyunu Kaydet"}</button>
             </div>
