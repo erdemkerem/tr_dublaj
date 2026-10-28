@@ -216,7 +216,7 @@ export function HomeStorefront({
                 </span>
                 <span className="text-white/20">•</span>
                 <span className="font-mono text-xs text-[#F59E0B]">
-                  %100 ÜCRETSİZ (REKLAM GEÇ & İNDİR)
+                  %100 ÜCRETSİZ İNDİR
                 </span>
               </div>
 
@@ -232,11 +232,11 @@ export function HomeStorefront({
                 <strong className="text-[#10B981]">
                   Resonance: A Plague Tale Legacy
                 </strong>{" "}
-                tamamen hazır. Google ile tek tıkla üye olun, kısa reklam linkini geçerek doğrudan{" "}
+                tamamen hazır. Ücretsiz üye olun ve doğrudan{" "}
                 <strong className="text-[#F8FAFC]">
-                  Google Drive, GitHub Releases veya MediaFire
+                  Yüksek Hızlı Bulut Barındırıcılarından
                 </strong>{" "}
-                barındırıcısından ücretsiz indirin!
+                ücretsiz indirin!
               </p>
 
               {/* AI Dubbing Telemetry Metrics */}
@@ -246,7 +246,7 @@ export function HomeStorefront({
                     ÜCRETSİZ
                   </div>
                   <div className="font-mono text-[11px] text-[#94A3B8] uppercase">
-                    Reklam Geç & İndir
+                    İndir
                   </div>
                 </div>
                 <div className="p-3.5 rounded-xl bg-[#13151C]/90 border border-white/10">
@@ -262,7 +262,7 @@ export function HomeStorefront({
                     {activeHeroProduct.fileSize}
                   </div>
                   <div className="font-mono text-[11px] text-[#94A3B8] uppercase">
-                    Drive & GitHub
+                    Tam Boyut
                   </div>
                 </div>
               </div>
@@ -275,7 +275,7 @@ export function HomeStorefront({
                   className="h-13 px-7 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] hover:brightness-110 text-[#0B0C10] font-display font-extrabold text-sm sm:text-base tracking-wide inline-flex items-center gap-3 shadow-[0_0_35px_-5px_rgba(16,185,129,0.65)] transition-all cursor-pointer"
                 >
                   <ExternalLink className="w-5 h-5" />
-                  <span>Ücretsiz İndir (Reklam Geç & Barındırıcıya Git)</span>
+                  <span>Ücretsiz İndir</span>
                 </button>
 
                 {heroSample && (
@@ -427,7 +427,7 @@ export function HomeStorefront({
                       {activeHeroProduct.gameTitle}
                     </div>
                     <div className="font-mono text-xs text-[#94A3B8]">
-                      Barındırıcı: Google Drive • GitHub Releases • MediaFire
+                      Barındırıcı Yönlendirmeleri Aktif
                     </div>
                   </div>
                   <Link
@@ -755,10 +755,10 @@ export function HomeStorefront({
               <Sparkles className="w-6 h-6" />
             </div>
             <h3 className="font-display text-lg font-bold text-[#F8FAFC]">
-              2. %100 Ücretsiz & Reklam Tıklama Desteği
+              2. %100 Ücretsiz
             </h3>
             <p className="text-xs sm:text-sm text-[#94A3B8] leading-relaxed">
-              Yamalarımız için hiçbir ücret talep etmiyoruz. Oyuncular Google ile otomatik üye olup sadece 5 saniyelik reklam linkini geçerek yeni AI dublajların üretilmesine ücretsiz destek oluyor.
+              Yamalarımız için hiçbir ücret talep etmiyoruz. Oyuncular ücretsiz üye olup yamaları tam hızda indirebilir.
             </p>
           </div>
 
@@ -767,10 +767,10 @@ export function HomeStorefront({
               <HardDrive className="w-6 h-6" />
             </div>
             <h3 className="font-display text-lg font-bold text-[#F8FAFC]">
-              3. GitHub & Bulut Barındırıcıya Yönlendirme
+              3. Doğrudan İndirme Yönlendirmesi
             </h3>
             <p className="text-xs sm:text-sm text-[#94A3B8] leading-relaxed">
-              Reklam adımını geçen oyuncular doğrudan yüksek hızlı Google Drive, GitHub Releases, MediaFire veya Mega.nz barındırıcısına yönlendirilir ve yamayı beklemeden indirir.
+              Oyuncular doğrudan yüksek hızlı bulut barındırıcıya yönlendirilir ve yamayı beklemeden indirir.
             </p>
           </div>
         </div>

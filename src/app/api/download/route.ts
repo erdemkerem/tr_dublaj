@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     if (!adCompleted) {
       return NextResponse.json(
-        { error: "İndirme linkleri reklam adımı tamamlandıktan sonra açılır." },
+        { error: "İndirme linkleri üye girişi sonrası açılır." },
         { status: 403 }
       );
     }

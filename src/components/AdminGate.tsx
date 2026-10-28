@@ -92,7 +92,7 @@ export function AdminGate() {
           ) : (
             <form onSubmit={handleLogin} className="space-y-4">
               <p className="text-xs text-[#94A3B8] leading-relaxed">
-                Bu sayfanın adresini ve anahtarı yalnızca siz bilirsiniz. Üyeler ve ziyaretçiler yönetim panelini, reklam linklerini veya Google Drive / GitHub indirme adreslerini <strong className="text-[#F8FAFC]">hiçbir şekilde göremez</strong>.
+                Bu sayfanın adresini ve anahtarı yalnızca siz bilirsiniz. Üyeler ve ziyaretçiler yönetim panelini veya indirme adreslerini <strong className="text-[#F8FAFC]">hiçbir şekilde göremez</strong>.
               </p>
 
               <div>

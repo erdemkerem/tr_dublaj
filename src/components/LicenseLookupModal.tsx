@@ -89,8 +89,9 @@ export function LicenseLookupModal() {
   const [newAiModel, setNewAiModel] = useState("Tr_dublaj AI Ses Klonlama");
   const [newAdUrl, setNewAdUrl] = useState("https://ay.live/tr-dublaj-yeni");
   const [newHostMirrors, setNewHostMirrors] = useState<HostMirrorItem[]>([
-    { provider: "Google Drive", url: "https://drive.google.com/drive/folders/tr-dublaj", label: "Google Drive" },
+    { provider: "", url: "", label: "" },
   ]);
+  const [newGalleryImages, setNewGalleryImages] = useState<string[]>([]);
   const [newCoverImage, setNewCoverImage] = useState("");
   const [newSubtitle, setNewSubtitle] = useState("");
   const [savingPatch, setSavingPatch] = useState(false);
@@ -183,7 +184,7 @@ export function LicenseLookupModal() {
   const addMirror = () => {
     setNewHostMirrors((prev) => [
       ...prev,
-      { provider: "Google Drive", url: "", label: "Yeni Barındırıcı" },
+      { provider: "", url: "", label: "Yeni Barındırıcı" },
     ]);
   };
 
@@ -195,6 +196,22 @@ export function LicenseLookupModal() {
     setNewHostMirrors((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const addGalleryImage = () => {
+    setNewGalleryImages((prev) => [...prev, ""]);
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setNewGalleryImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateGalleryImage = (index: number, value: string) => {
+    setNewGalleryImages((prev) => {
+      const next = [...prev];
+      next[index] = value;
       return next;
     });
   };
@@ -217,6 +234,14 @@ export function LicenseLookupModal() {
           hostMirrors: newHostMirrors,
           coverImage: newCoverImage,
           subtitle: newSubtitle,
+          galleryImages: newGalleryImages
+            .map((url) => url.trim())
+            .filter(Boolean)
+            .map((url) => ({
+              url,
+              caption: `${newGameTitle} Ekran Görüntüsü`,
+              tag: "ÖNİZLEME",
+            })),
         }),
       });
       if (res.ok) {
@@ -224,8 +249,9 @@ export function LicenseLookupModal() {
         setNewGameTitle("");
         setNewSubtitle("");
         setNewHostMirrors([
-          { provider: "Google Drive", url: "", label: "Yeni Barındırıcı" },
+          { provider: "", url: "", label: "" },
         ]);
+        setNewGalleryImages([]);
         await fetchProductsForAdmin();
       } else {
         const data = await res.json();
@@ -785,6 +811,39 @@ export function LicenseLookupModal() {
                         </div>
                       </div>
 
+                      <div>
+                          <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1">
+                            Galeri Görselleri (Link Ekle)
+                          </label>
+                          <div className="space-y-2">
+                            {newGalleryImages.map((url, i) => (
+                              <div key={i} className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="https://example.com/ekran-gorseli.jpg"
+                                  value={url}
+                                  onChange={(e) => updateGalleryImage(i, e.target.value)}
+                                  className="flex-1 h-10 px-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeGalleryImage(i)}
+                                  className="h-10 px-3 rounded-xl bg-[#EF4444]/15 border border-[#EF4444]/30 text-[#EF4444] text-xs hover:bg-[#EF4444]/30 transition"
+                                >
+                                  Sil
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={addGalleryImage}
+                              className="w-full h-9 px-3 rounded-lg bg-[#13151C] border border-white/15 text-[#94A3B8] text-xs font-mono hover:text-[#F8FAFC] hover:border-[#F59E0B]/40 transition"
+                            >
+                              <Plus className="w-3 h-3" /> Görsel Ekle
+                            </button>
+                          </div>
+                        </div>
+
                       <button
                         type="submit"
                         disabled={savingPatch}
@@ -889,7 +948,7 @@ export function LicenseLookupModal() {
                                       prod.hostMirrors?.[0]?.url ||
                                       "",
                                     prod.hostMirrors?.[0]?.provider ||
-                                      "Google Drive"
+                                      "Barındırıcı"
                                   );
                                 }}
                                 className="h-9 rounded-lg bg-[#1C1F2B] hover:bg-[#262B3D] border border-white/15 font-mono text-[11px] font-bold text-[#F8FAFC] cursor-pointer"

@@ -102,15 +102,12 @@ export async function POST(request: NextRequest) {
       body.aiModelInfo || "ElevenLabs + RVC v2 AI Ses Klonlama"
     ).trim();
     const adShortlinkUrl = String(
-      body.adShortlinkUrl || "https://ay.live/tr-dublaj-link"
+      body.adShortlinkUrl || ""
     ).trim();
     const hostUrl = String(
-      body.hostUrl || "https://drive.google.com/drive/folders/tr-dublaj"
+      body.hostUrl || ""
     ).trim();
-    const hostProvider = String(body.hostProvider || "Google Drive").trim();
-    const githubUrl = String(
-      body.githubUrl || "https://github.com/tr-dublaj"
-    ).trim();
+    const hostProvider = String(body.hostProvider || "").trim();
     const coverImage = String(
       body.coverImage || "/images/resonance-plague-tale.jpg"
     ).trim();
@@ -130,23 +127,28 @@ export async function POST(request: NextRequest) {
         subtitle,
         description:
           body.description ||
-          `${gameTitle} oyunu için ${aiModelInfo} kullanılarak hazırlanan %100 ücretsiz Türkçe seslendirme ve altyazı paketi. Üye olup reklam linkini geçerek doğrudan ${hostProvider} veya GitHub üzerinden indirebilirsiniz.`,
+          `${gameTitle} oyunu için ${aiModelInfo} kullanılarak hazırlanan %100 ücretsiz Türkçe seslendirme ve altyazı paketi. Üye olup doğrudan barındırıcıdan indirebilirsiniz.`,
         status,
         progressPercent: status === "ready" ? 100 : Number(body.progressPercent || 50),
         aiModelInfo,
         adShortlinkUrl,
-        hostMirrors: [
-          {
-            provider: hostProvider,
-            url: hostUrl,
-            label: `${hostProvider} (Ana İndirme Bağlantısı - ${fileSize})`,
-          },
-          {
-            provider: "GitHub Releases",
-            url: githubUrl,
-            label: "GitHub Releases (Alternatif Yedek)",
-          },
-        ],
+        hostMirrors: Array.isArray(body.hostMirrors) && body.hostMirrors.length > 0
+          ? body.hostMirrors.map(
+              (m: { provider?: string; url?: string; label?: string }) => ({
+                provider: String(m.provider || "").trim(),
+                url: String(m.url || "").trim(),
+                label: String(m.label || m.provider || "Barındırıcı").trim(),
+              })
+            ).filter((m: { provider: string; url: string }) => m.provider || m.url)
+          : hostProvider && hostUrl
+          ? [
+              {
+                provider: hostProvider,
+                url: hostUrl,
+                label: `${hostProvider} (Ana İndirme Bağlantısı - ${fileSize})`,
+              },
+            ]
+          : [],
         price: 0,
         originalPrice: 0,
         patchType: status === "ready" ? "ai_full_dub" : "wishlist_vote",
@@ -166,15 +168,25 @@ export async function POST(request: NextRequest) {
         translatedLinesCount: String(body.translatedLinesCount || "18.500+ Satır"),
         studioHours: 80,
         coverImage,
-        galleryImages: [
-          {
-            url: coverImage,
-            caption: `${gameTitle} — AI Türkçe Dublaj & Altyazı Ekran Görüntüsü`,
-            tag: status === "ready" ? "HAZIR AI DUBLAJ" : "PROJE ÖNİZLEME",
-            dialoguePreviewTr: `[${gameTitle} - AI Türkçe Dublaj Aktif] Tüm ana diyaloglar orijinal karakter ses tonuyla Türkçeleştirildi.`,
-            dialoguePreviewEn: `[${gameTitle} - Original Audio] Original English voice track.`,
-          },
-        ],
+        galleryImages: Array.isArray(body.galleryImages) && body.galleryImages.length > 0
+          ? body.galleryImages.map(
+              (g: { url?: string; caption?: string; tag?: string }) => ({
+                url: String(g.url || "").trim(),
+                caption: String(g.caption || `${gameTitle} Ekran Görüntüsü`).trim(),
+                tag: String(g.tag || "ÖNİZLEME").trim(),
+                dialoguePreviewTr: `[${gameTitle} - AI Türkçe Dublaj Aktif]`,
+                dialoguePreviewEn: `[${gameTitle} - Original Audio]`,
+              })
+            ).filter((g: { url: string }) => g.url)
+          : [
+              {
+                url: coverImage,
+                caption: `${gameTitle} — AI Türkçe Dublaj & Altyazı Ekran Görüntüsü`,
+                tag: status === "ready" ? "HAZIR AI DUBLAJ" : "PROJE ÖNİZLEME",
+                dialoguePreviewTr: `[${gameTitle} - AI Türkçe Dublaj Aktif] Tüm ana diyaloglar orijinal karakter ses tonuyla Türkçeleştirildi.`,
+                dialoguePreviewEn: `[${gameTitle} - Original Audio] Original English voice track.`,
+              },
+            ],
         audioSamples: [
           {
             id: `sample-${Date.now()}`,
@@ -197,13 +209,13 @@ export async function POST(request: NextRequest) {
           },
         ],
         features: [
-          "%100 Ücretsiz: Reklam linkini geçerek doğrudan barındırıcıdan indirin",
+          "%100 Ücretsiz: Doğrudan barındırıcıdan indirin",
           `${aiModelInfo} ile orijinal ses tonu korunarak dublajlandı`,
           "Tam Türkçe karakter destekli altyazı ve arayüz",
         ],
         installNotes: [
-          "Üye girişi yapıp 'Reklam Geç & Ücretsiz İndir' butonuna tıklayın.",
-          "Yönlendirilen barındırıcıdan (Google Drive / GitHub) arşivi indirip oyun klasörüne çıkartın.",
+          "Üye girişi yapıp 'Ücretsiz İndir' butonuna tıklayın.",
+          "Yönlendirilen barındırıcıdan arşivi indirip oyun klasörüne çıkartın.",
         ],
         isFeatured: true,
         collectionTag: status === "ready" ? "hazir-yama" : "istek-listesi",
@@ -295,17 +307,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (body.hostUrl) {
-      const provider = String(body.hostProvider || "Google Drive");
+      const provider = String(body.hostProvider || "Barındırıcı");
       updateData.hostMirrors = [
         {
           provider,
           url: String(body.hostUrl).trim(),
           label: `${provider} (Güncel İndirme Sunucusu)`,
-        },
-        {
-          provider: "GitHub Releases",
-          url: String(body.githubUrl || "https://github.com/tr-dublaj").trim(),
-          label: "GitHub Releases (Yedek Bağlantı)",
         },
       ];
     }

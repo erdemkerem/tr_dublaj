@@ -23,17 +23,17 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-[#94A3B8] leading-relaxed max-w-md">
-              Yapay zekâ (RVC v2, Tr_dublaj, XTTS) ses klonlama teknolojisiyle hazırladığımız Türkçe oyun dublajlarını; oyunculara %100 ücretsiz, reklam tıklama destekli ve doğrudan bulut barındırıcı (Google Drive / GitHub Releases / MediaFire) yönlendirmesiyle sunuyoruz.
+              Yapay zekâ (RVC v2, Tr_dublaj, XTTS) ses klonlama teknolojisiyle hazırladığımız Türkçe oyun dublajlarını; oyunculara %100 ücretsiz ve doğrudan indirme seçeneğiyle sunuyoruz.
             </p>
             <div className="flex flex-wrap items-center gap-2 pt-1 font-mono text-[11px]">
               <span className="px-2.5 py-1 rounded-lg bg-[#13151C] border border-white/10 text-[#10B981]">
-                %100 Ücretsiz (Reklam Destekli)
+                %100 Ücretsiz
               </span>
               <span className="px-2.5 py-1 rounded-lg bg-[#13151C] border border-white/10 text-[#F8FAFC]">
                 RVC v2 Orijinal Ses Klonu
               </span>
               <span className="px-2.5 py-1 rounded-lg bg-[#13151C] border border-white/10 text-[#F59E0B]">
-                GitHub & Drive Yönlendirme
+                Ücretsiz Dublaj Yönlendirme
               </span>
             </div>
           </div>
@@ -65,7 +65,7 @@ export function Footer() {
                   href="/#ai-teknolojisi"
                   className="hover:text-[#F43F5E] transition-colors"
                 >
-                  Reklam Geç & Barındırıcı Sistemi
+                  Barındırıcı Sistemi
                 </Link>
               </li>
               <li>
@@ -101,7 +101,7 @@ export function Footer() {
               Üyelik & Kolay Yama Yönetimi
             </h4>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Oyuncular <strong className="text-[#F8FAFC]">Google, Yandex veya Proton Mail</strong> ile saniyeler içinde üye olup yamaları ücretsiz indirebilir. İndirme linkleri yalnızca üyelere, reklam adımından sonra açılır.
+              Oyuncular saniyeler içinde üye olup yamaları ücretsiz indirebilir. İndirme linkleri yalnızca üyelere açılır.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <button
@@ -136,7 +136,7 @@ export function Footer() {
           </div>
           <div className="flex items-center gap-4 text-[#64748B]">
             <span className="flex items-center gap-1 text-[#94A3B8]">
-              <Cpu className="w-3.5 h-3.5 text-[#10B981]" /> GitHub Pages • Google Drive • MediaFire
+              <Cpu className="w-3.5 h-3.5 text-[#10B981]" /> Yapay Zeka • Türkçe Dublaj • Ücretsiz İndirme
             </span>
           </div>
         </div>

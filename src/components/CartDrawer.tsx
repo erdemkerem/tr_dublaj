@@ -53,7 +53,7 @@ export function CartDrawer() {
                   İstek & İndirme Listem
                 </h2>
                 <p className="text-xs font-mono text-[#10B981]">
-                  %100 Ücretsiz • Reklam Geçerek Barındırıcıdan İndir
+                  %100 Ücretsiz Barındırıcıdan İndir
                 </p>
               </div>
             </div>
@@ -73,7 +73,7 @@ export function CartDrawer() {
               <p className="text-xs text-[#10B981] flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>
-                  Hoş geldin <strong>{currentUser.name}</strong> ({currentUser.provider.toUpperCase()}). Hazır dublajları reklam geçerek ücretsiz indirebilirsin!
+                  Hoş geldin <strong>{currentUser.name}</strong> ({currentUser.provider.toUpperCase()}). Hazır dublajları ücretsiz indirebilirsin!
                 </span>
               </p>
             ) : (
@@ -184,7 +184,7 @@ export function CartDrawer() {
                         className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#10B981] text-[#0B0C10] font-mono text-[11px] font-bold cursor-pointer hover:brightness-110"
                       >
                         <ExternalLink className="w-3 h-3" />
-                        <span>Reklam Geç & İndir</span>
+                        <span>İndir</span>
                       </button>
                     ) : (
                       <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#F59E0B]">
@@ -220,7 +220,7 @@ export function CartDrawer() {
               <div className="flex justify-between items-baseline pt-2 border-t border-white/10 text-base font-bold text-[#F8FAFC]">
                 <span>Ücret</span>
                 <span className="font-mono text-lg text-[#10B981]">
-                  0 ₺ (Reklam Destekli)
+                  0 ₺
                 </span>
               </div>
             </div>
@@ -230,13 +230,13 @@ export function CartDrawer() {
               onClick={() => openCheckout()}
               className="w-full h-12 rounded-xl bg-gradient-to-r from-[#E11D48] to-[#BE123C] hover:brightness-110 text-white font-display font-bold text-sm tracking-wide flex items-center justify-center gap-2 shadow-[0_0_30px_-5px_rgba(225,29,72,0.5)] transition-all cursor-pointer"
             >
-              <span>Reklam Geç & Barındırıcıya Yönlen</span>
+              <span>Barındırıcıya Yönlen</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
             <div className="flex items-center justify-center gap-2 text-[11px] text-[#94A3B8] font-mono">
               <ShieldCheck className="w-3.5 h-3.5 text-[#10B981]" />
-              <span>Google Drive • GitHub Releases • MediaFire Direkt Yönlendirme</span>
+              <span>Doğrudan İndirme Yönlendirmesi</span>
             </div>
           </div>
         )}

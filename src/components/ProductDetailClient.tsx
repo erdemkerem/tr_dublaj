@@ -510,7 +510,7 @@ export function ProductDetailClient({
                   <div className="p-4 rounded-xl bg-[#10B981]/10 border border-[#10B981]/30 flex items-center gap-3 text-xs text-[#10B981]">
                     <Terminal className="w-5 h-5 shrink-0" />
                     <span>
-                      Reklam geçişi sonrasında doğrudan Google Drive, GitHub Releases veya MediaFire barındırıcısına yönlendirilirsiniz.
+                      İndirme adımı sonrasında doğrudan bulut barındırıcıya yönlendirilirsiniz.
                     </span>
                   </div>
                   <div className="space-y-3">
@@ -578,7 +578,7 @@ export function ProductDetailClient({
                 </div>
               </div>
               <span className="px-3 py-1.5 rounded-xl bg-[#F59E0B]/15 border border-[#F59E0B]/30 font-mono text-xs font-bold text-[#F59E0B]">
-                REKLAM GEÇ & İNDİR
+                ÜCRETSİZ İNDİR
               </span>
             </div>
 
@@ -591,7 +591,7 @@ export function ProductDetailClient({
                   className="w-full h-14 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] hover:brightness-110 text-[#0B0C10] font-display font-extrabold text-sm sm:text-base tracking-wide flex items-center justify-center gap-2.5 shadow-[0_0_30px_-5px_rgba(16,185,129,0.65)] transition-all cursor-pointer"
                 >
                   <ExternalLink className="w-5 h-5" />
-                  <span>Reklam Geç & Barındırıcıya Yönlen</span>
+                  <span>Barındırıcıya Yönlen</span>
                 </button>
               ) : (
                 <button
@@ -700,16 +700,16 @@ export function ProductDetailClient({
                   className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#F59E0B] hover:underline cursor-pointer"
                 >
                   <Settings className="w-3.5 h-3.5" />
-                  <span>Reklam & Barındırıcı Linkini Düzenle</span>
+                  <span>Barındırıcı Linkini Düzenle</span>
                 </button>
               ) : (
                 <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#94A3B8]">
                   <Settings className="w-3.5 h-3.5" />
-                  <span>Linkler üyelere reklam sonrası açılır</span>
+                  <span>Linkler üyelere indirme adımından sonra açılır</span>
                 </span>
               )}
               <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#10B981]">
-                <ShieldCheck className="w-4 h-4" /> GitHub & Drive Güvenli
+                <ShieldCheck className="w-4 h-4" /> Güvenli
               </span>
             </div>
           </div>

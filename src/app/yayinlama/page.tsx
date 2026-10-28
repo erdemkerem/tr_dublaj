@@ -97,7 +97,7 @@ const GITHUB_STEPS = [
   {
     title: "4. Linki panele yapıştır",
     detail:
-      "Yönetim panelinde (/yonetim) 'GitHub Releases Yedek' kutusuna bu linki yapıştır. Link üyelere görünmez, sadece reklam sonrası açılır.",
+      "Yönetim panelinde (/yonetim) 'GitHub Releases Yedek' kutusuna bu linki yapıştır. Link üyelere görünmez, sadece indirme adımından sonra açılır.",
   },
 ];
 
@@ -287,7 +287,7 @@ export default function PublishGuidePage() {
             <ul className="space-y-2 text-xs text-[#94A3B8]">
               {[
                 "Google Drive / GitHub / MediaFire linkleri sayfa kaynağında yer almaz.",
-                "Linkler sadece üye girişi + reklam adımı sonrası sunucudan gelir.",
+                "Linkler sadece üye girişi + indirme adımı sonrası sunucudan gelir.",
                 "Üyeler panele, ekleme/silme işlemlerine asla erişemez.",
                 "Üyelik Google, Yandex ve Proton Mail ile tek tıkla açılır.",
               ].map((t) => (

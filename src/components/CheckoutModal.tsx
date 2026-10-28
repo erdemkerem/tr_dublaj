@@ -106,7 +106,7 @@ export function CheckoutModal() {
           setTargetAdLink(data.adShortlinkUrl || "");
           setTargetMirrors(data.hostMirrors || []);
           setStep(3);
-          showToast("Reklam doğrulandı! Barındırıcı linkleri açıldı.");
+          showToast("Doğrulama tamamlandı! Barındırıcı linkleri açıldı.");
         } catch {
           setUnlockError("Sunucuya bağlanılamadı, tekrar deneyin.");
         }
@@ -184,7 +184,7 @@ export function CheckoutModal() {
   const handleTriggerAdClick = () => {
     setAdClicked(true);
     showToast(
-      "Sponsor reklam bağlantısı kontrol ediliyor... 5 saniye içinde barındırıcıya yönlendirileceksiniz."
+      "Bağlantı kontrol ediliyor... 5 saniye içinde barındırıcıya yönlendirileceksiniz."
     );
   };
 
@@ -237,7 +237,7 @@ export function CheckoutModal() {
         <div className="px-6 py-5 bg-[#13151C] border-b border-white/10 flex items-center justify-between">
           <div>
             <span className="font-mono text-[11px] uppercase tracking-widest text-[#10B981]">
-              %100 ÜCRETSİZ • REKLAM GEÇEREK İNDİRME SİSTEMİ
+              %100 ÜCRETSİZ İNDİRME SİSTEMİ
             </span>
             <h2 className="font-display text-xl font-bold text-[#F8FAFC] mt-0.5">
               {targetTitle} — AI Türkçe Dublaj İndir
@@ -287,7 +287,7 @@ export function CheckoutModal() {
             >
               2
             </span>
-            <span>Reklam Tıklama (Destek)</span>
+            <span>Destek</span>
           </div>
           <div className="flex-1 h-px bg-white/10" />
           <div
@@ -311,7 +311,7 @@ export function CheckoutModal() {
           {step === 1 && (
             <div className="space-y-5">
               <div className="p-4 rounded-xl bg-[#13151C] border border-white/10 text-xs text-[#94A3B8] leading-relaxed">
-                İndirme barındırıcısına (<strong className="text-[#F8FAFC]">Google Drive, GitHub Releases, MediaFire</strong>) yönlenmek ve yeni AI dublajlar eklendikçe bildirim almak için Google veya diğer hesaplarınızla tek tıkla ücretsiz üye olun.
+                İndirme barındırıcısına yönelmek ve yeni AI dublajlar eklendikçe bildirim almak için hesaplarınızla tek tıkla ücretsiz üye olun.
               </div>
 
               {/* ÜYELİK SÖZLEŞMESİ ONAYI — ZORUNLU */}
@@ -428,21 +428,21 @@ export function CheckoutModal() {
               {/* Sponsor Ad-Click Box */}
               <div className="p-6 rounded-2xl bg-gradient-to-br from-[#13151C] via-[#1C1522] to-[#13151C] border border-[#F59E0B]/40 text-center space-y-4 shadow-xl">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F59E0B]/20 text-[#F59E0B] font-mono text-xs font-bold">
-                  <Sparkles className="w-3.5 h-3.5" /> ÜCRETSİZ DESTEK ADIMI (REKLAM GEÇİŞİ)
+                  <Sparkles className="w-3.5 h-3.5" /> ÜCRETSİZ DESTEK ADIMI
                 </span>
 
                 <h3 className="font-display text-xl font-extrabold text-[#F8FAFC]">
-                  Barındırıcı Linkini Açmak İçin Reklama Tıklayın
+                  İndirme Adımı — Destek Olarak Devam Et
                 </h3>
 
                 <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mx-auto leading-relaxed">
-                  Yapay zekâ (AI) ile hazırladığımız Türkçe dublajları tamamen ücretsiz dağıtıyoruz. Yeni oyunların seslendirilmesi için aşağıdaki reklam linkine tıklayıp{" "}
+                  Yapay zekâ (AI) ile hazırladığımız Türkçe dublajları tamamen ücretsiz dağıtıyoruz. Yeni oyunların seslendirilmesi için aşağıdaki destek adımına tıklayıp{" "}
                   <strong className="text-[#F8FAFC]">5 saniye</strong> beklemeniz yeterlidir.
                 </p>
 
                 <div className="p-3 rounded-xl bg-[#0B0C10] border border-white/10 font-mono text-xs text-[#94A3B8] flex items-center justify-between max-w-md mx-auto">
                   <span className="truncate">
-                    Yönlendirme Linki: 🔒 ••••••••••••••••••• (reklam sonrası açılır)
+                    Yönlendirme Linki: 🔒 ••••••••••••••••••• (adım sonrası açılır)
                   </span>
                   <span className="text-[#10B981] shrink-0 ml-2">Güvenli</span>
                 </div>
@@ -460,7 +460,7 @@ export function CheckoutModal() {
                     className="h-14 px-8 rounded-xl bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:brightness-110 text-[#0B0C10] font-display font-extrabold text-sm sm:text-base tracking-wide inline-flex items-center gap-3 shadow-[0_0_35px_rgba(245,158,11,0.45)] transition-all cursor-pointer"
                   >
                     <MousePointerClick className="w-5 h-5" />
-                    <span>Reklama Tıkla & Barındırıcı Kilidini Aç</span>
+                    <span>Ücretsiz İndir</span>
                   </button>
                 ) : (
                   <div className="space-y-3 max-w-md mx-auto pt-2">
@@ -490,13 +490,13 @@ export function CheckoutModal() {
                 </div>
                 <div>
                   <span className="font-mono text-xs font-bold uppercase text-[#10B981]">
-                    REKLAM GEÇİLDİ • BARINDIRICI LİNKLERİ AKTİF!
+                    BARINDIRICI LİNKLERİ AKTİF!
                   </span>
                   <h3 className="font-display text-lg font-bold text-[#F8FAFC] mt-0.5">
                     {targetTitle} ({targetVersion}) İndirmeye Hazır
                   </h3>
                   <p className="text-xs text-[#94A3B8] mt-1">
-                    Desteğiniz için teşekkürler! Aşağıdaki bulut barındırıcılardan (Google Drive, GitHub Releases, MediaFire, Mega) dilediğinizi seçerek doğrudan indirebilirsiniz.
+                    Desteğiniz için teşekkürler! Aşağıdaki bulut barındırıcılardan dilediğinizi seçerek doğrudan indirebilirsiniz.
                   </p>
                 </div>
               </div>

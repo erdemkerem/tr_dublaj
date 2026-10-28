@@ -11,7 +11,7 @@ export const metadata = {
 const TERMS = [
   {
     t: "1. Hizmetin Kapsamı",
-    d: "tr_dublaj, yapay zekâ (AI) ses klonlama teknolojisiyle hazırlanan Türkçe oyun dublaj yamalarını ücretsiz olarak paylaşan bir topluluk platformudur. Yamalar için hiçbir ücret talep edilmez; platform reklam görüntüleme yoluyla desteklenir.",
+    d: "tr_dublaj, yapay zekâ (AI) ses klonlama teknolojisiyle hazırlanan Türkçe oyun dublaj yamalarını ücretsiz olarak paylaşan bir topluluk platformudur. Yamalar için hiçbir ücret talep edilmez.",
   },
   {
     t: "2. Üyelik",

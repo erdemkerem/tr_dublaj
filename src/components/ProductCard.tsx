@@ -238,7 +238,7 @@ export function ProductCard({ product }: ProductCardProps) {
             ÜCRETSİZ
           </span>
           <span className="font-mono text-[10px] text-[#94A3B8]">
-            {isReady ? "Reklam Geç & İndir" : "İstek Listesi"}
+            {isReady ? "İndir" : "İstek Listesi"}
           </span>
         </div>
 
@@ -259,7 +259,7 @@ export function ProductCard({ product }: ProductCardProps) {
               className="h-10 px-4 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] hover:brightness-110 text-[#0B0C10] font-display text-xs font-extrabold tracking-wide inline-flex items-center gap-1.5 shadow-[0_0_20px_-4px_rgba(16,185,129,0.55)] transition-all cursor-pointer"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              <span>Reklam Geç & İndir</span>
+              <span>İndir</span>
             </button>
           ) : (
             <button
