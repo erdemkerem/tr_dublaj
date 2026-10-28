@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Heart,
@@ -20,6 +20,7 @@ import {
   Terminal,
   ExternalLink,
   Settings,
+  UserCheck,
 } from "lucide-react";
 import type { Product, Review } from "@/db/schema";
 import { useStore } from "@/context/StoreContext";
@@ -39,7 +40,8 @@ export function ProductDetailClient({
   const {
     addToCart,
     openCheckout,
-    openAdminModal,
+    currentUser,
+    openAuthModal,
     isAdmin,
     activeAudio,
     playStudioSample,
@@ -81,6 +83,14 @@ export function ProductDetailClient({
   const [reviewTitle, setReviewTitle] = useState("");
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Üye giriş yaptıysa ad + etiket otomatik doldurulur (gerçek üye yorumu)
+  useEffect(() => {
+    if (currentUser) {
+      setAuthorName(currentUser.name);
+      setGamerTag(currentUser.gamerTag || "");
+    }
+  }, [currentUser]);
 
   const currentGalleryItem = gallery[selectedImageIdx] || gallery[0];
 
@@ -124,6 +134,11 @@ export function ProductDetailClient({
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser) {
+      showToast("Yorum yazmak için üye girişi yapmalısın.");
+      openAuthModal();
+      return;
+    }
     if (!authorName.trim() || !reviewTitle.trim() || !reviewComment.trim()) {
       return;
     }
@@ -693,16 +708,7 @@ export function ProductDetailClient({
 
             {/* Admin Quick Edit Button */}
             <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2">
-              {isAdmin ? (
-                <button
-                  type="button"
-                  onClick={openAdminModal}
-                  className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#F59E0B] hover:underline cursor-pointer"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                  <span>Barındırıcı Linkini Düzenle</span>
-                </button>
-              ) : (
+              {isAdmin ? null : (
                 <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#94A3B8]">
                   <Settings className="w-3.5 h-3.5" />
                   <span>Linkler üyelere indirme adımından sonra açılır</span>
@@ -795,6 +801,7 @@ export function ProductDetailClient({
           </div>
 
           <div className="lg:col-span-5">
+            {currentUser ? (
             <form
               onSubmit={handleSubmitReview}
               className="p-6 rounded-2xl bg-[#13151C] border border-white/15 space-y-4"
@@ -922,6 +929,34 @@ export function ProductDetailClient({
                 </span>
               </button>
             </form>
+            ) : (
+              <div className="p-6 rounded-2xl bg-[#13151C] border border-white/15 space-y-4 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#10B981]/15 border border-[#10B981]/30 flex items-center justify-center mx-auto text-[#10B981]">
+                  <UserCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#10B981]">
+                    YALNIZCA GERÇEK ÜYE YORUMLARI
+                  </span>
+                  <h3 className="font-display text-lg font-bold text-[#F8FAFC] mt-1">
+                    Yorum yazmak için üye girişi yap
+                  </h3>
+                  <p className="text-xs text-[#94A3B8] mt-2 leading-relaxed">
+                    Ücretsiz e-posta onaylı üyelik ile giriş yapıp bu oyunu
+                    puanlayabilir ve deneyimini yazabilirsin. Yazdığın yorum
+                    doğrudan sitede yayınlanır.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={openAuthModal}
+                  className="w-full h-11 rounded-xl bg-[#10B981] text-[#0B0C10] font-display font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-110 transition-all cursor-pointer"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  <span>Üye Girişi / Ücretsiz Üyelik</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>

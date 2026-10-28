@@ -16,7 +16,6 @@ import {
   ExternalLink,
   Heart,
   Plus,
-  Settings,
   LogIn,
   Send,
   HardDrive,
@@ -40,9 +39,7 @@ export function HomeStorefront({
     addToCart,
     openCheckout,
     openAuthModal,
-    openAdminModal,
     currentUser,
-    isAdmin,
     activeAudio,
     playStudioSample,
     stopStudioSample,
@@ -139,6 +136,13 @@ export function HomeStorefront({
   const handleSubmitGameRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reqGameTitle.trim()) return;
+    if (!currentUser) {
+      showToast(
+        "İstek listesine oyun eklemek için üye girişi yapmalısın."
+      );
+      openAuthModal();
+      return;
+    }
     setSubmittingReq(true);
 
     try {
@@ -147,12 +151,8 @@ export function HomeStorefront({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           gameTitle: reqGameTitle,
-          requesterName: currentUser
-            ? `${currentUser.name} (@${currentUser.gamerTag})`
-            : "Oyuncu_TR",
-          requesterProvider: currentUser
-            ? `${currentUser.provider.toUpperCase()} Üyesi`
-            : "Google Üyesi",
+          requesterName: currentUser.name,
+          requesterProvider: "",
           note:
             reqNote.trim() ||
             `${reqGameTitle} için yapay zekâ (AI) Türkçe dublaj yapılmasını istiyorum!`,
@@ -337,19 +337,6 @@ export function HomeStorefront({
                     ✓ Aktif Üye: {currentUser.name} ({currentUser.provider.toUpperCase()})
                   </span>
                 )}
-                {isAdmin && (
-                  <>
-                    <span>•</span>
-                    <button
-                      type="button"
-                      onClick={openAdminModal}
-                      className="inline-flex items-center gap-1.5 text-[#F59E0B] hover:underline cursor-pointer"
-                    >
-                      <Settings className="w-3.5 h-3.5" />
-                      <span>Yönetim Paneli</span>
-                    </button>
-                  </>
-                )}
               </div>
             </div>
 
@@ -492,21 +479,10 @@ export function HomeStorefront({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {isAdmin ? (
-              <button
-                type="button"
-                onClick={openAdminModal}
-                className="h-10 px-4 rounded-xl bg-[#F59E0B]/20 hover:bg-[#F59E0B] text-[#F59E0B] hover:text-[#0B0C10] border border-[#F59E0B]/40 font-mono text-xs font-bold inline-flex items-center gap-2 transition-all cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Yeni Yaptığın Oyunu Ekle / Düzenle</span>
-              </button>
-            ) : (
-              <span className="h-10 px-4 rounded-xl bg-[#13151C] border border-white/10 font-mono text-xs text-[#94A3B8] inline-flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#10B981]" />
-                <span>Yeni AI dublajlar eklendikçe burada yayınlanır</span>
-              </span>
-            )}
+            <span className="h-10 px-4 rounded-xl bg-[#13151C] border border-white/10 font-mono text-xs text-[#94A3B8] inline-flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#10B981]" />
+              <span>Yeni AI dublajlar eklendikçe burada yayınlanır</span>
+            </span>
           </div>
         </div>
 
@@ -646,7 +622,8 @@ export function HomeStorefront({
                           &ldquo;{req.note}&rdquo;
                         </p>
                         <div className="font-mono text-[10px] text-[#64748B]">
-                          İsteyen: {req.requesterName} ({req.requesterProvider}) •{" "}
+                          İsteyen: {req.requesterName}
+                          {req.requesterProvider ? ` (${req.requesterProvider})` : ""} •{" "}
                           {req.aiDifficulty}
                         </div>
                       </div>
@@ -713,6 +690,17 @@ export function HomeStorefront({
                     className="w-full p-3.5 rounded-xl bg-[#13151C] border border-white/15 text-xs text-[#F8FAFC] focus:outline-none focus:border-[#E11D48]"
                   />
                 </div>
+
+                {currentUser ? (
+                  <p className="font-mono text-[10px] text-[#64748B]">
+                    İsteyen: {currentUser.name} olarak kaydedilecek.
+                  </p>
+                ) : (
+                  <p className="font-mono text-[10px] text-[#F59E0B]">
+                    İstek eklemek için üye girişi yapmalısın — butona basınca
+                    giriş penceresi açılır.
+                  </p>
+                )}
 
                 <button
                   type="submit"
@@ -792,12 +780,37 @@ export function HomeStorefront({
           </div>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#13151C] border border-white/10 font-mono text-xs">
             <Star className="w-4 h-4 text-[#F59E0B] fill-[#F59E0B]" />
-            <span className="text-[#F8FAFC] font-bold">5.0 / 5.0</span>
+            <span className="text-[#F8FAFC] font-bold">
+              {reviewsList.length > 0
+                ? "Üye Oyları • Gerçek İncelemeler"
+                : "İlk yorumu sen yaz"}
+            </span>
             <span className="text-[#94A3B8]">• %100 Ücretsiz AI Yama</span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {reviewsList.length === 0 && (
+            <div className="md:col-span-2 p-8 rounded-2xl bg-[#13151C] border border-white/10 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#10B981]/15 border border-[#10B981]/30 flex items-center justify-center mx-auto text-[#10B981]">
+                <Star className="w-6 h-6" />
+              </div>
+              <h3 className="font-display text-lg font-bold text-[#F8FAFC]">
+                Burada yalnızca gerçek üye yorumları yayınlanır
+              </h3>
+              <p className="text-xs sm:text-sm text-[#94A3B8] max-w-lg mx-auto leading-relaxed">
+                Yamayı indirip oynayan üyeler, oyun sayfasında puan verip
+                yorumunu yazar; onlar da burada birebir yayınlanır. Hiçbir
+                yorum sitemizde düzenlenmeyecek veya uydurulmayacak.
+              </p>
+              <a
+                href="/urun/resonance-a-plague-tale-legacy-ai-turkce-dublaj"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#10B981] text-[#0B0C10] font-mono text-xs font-extrabold cursor-pointer"
+              >
+                İlk Yorumu Yaz
+              </a>
+            </div>
+          )}
           {reviewsList.map((rev) => (
             <div
               key={rev.id}

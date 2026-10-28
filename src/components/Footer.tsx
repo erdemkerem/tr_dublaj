@@ -2,11 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import { Bot, ShieldCheck, Cpu, Settings, LogIn } from "lucide-react";
+import { Bot, ShieldCheck, Cpu, LogIn } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
 
 export function Footer() {
-  const { openAdminModal, openAuthModal, isAdmin } = useStore();
+  const { openAuthModal } = useStore();
 
   return (
     <footer className="bg-[#08090C] border-t border-white/10 text-[#94A3B8] mt-24">
@@ -112,16 +112,6 @@ export function Footer() {
                 <LogIn className="w-3.5 h-3.5 text-[#E11D48]" />
                 <span>Üye Ol</span>
               </button>
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={openAdminModal}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#13151C] hover:bg-[#1C1F2B] border border-[#F59E0B]/40 text-xs font-mono text-[#F59E0B] cursor-pointer"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                  <span>Yönetim Paneli</span>
-                </button>
-              )}
             </div>
           </div>
         </div>

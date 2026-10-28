@@ -21,33 +21,24 @@ import {
   KeyRound,
   EyeOff,
   AlertCircle,
+  Calendar,
+  Users,
+  MailCheck,
+  ThumbsUp,
 } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
-import type { Product, HostMirrorItem } from "@/db/schema";
+import type { Product, HostMirrorItem, GameRequest } from "@/db/schema";
 
-const MAIL_PROVIDERS = [
-  {
-    id: "google",
-    label: "Google / Gmail",
-    domain: "gmail.com",
-    color: "bg-white text-[#0B0C10]",
-    note: "En hızlı giriş",
-  },
-  {
-    id: "yandex",
-    label: "Yandex Mail",
-    domain: "yandex.com",
-    color: "bg-[#FC3F1D]/20 text-[#FC3F1D] border border-[#FC3F1D]/40",
-    note: "Yandex hesabı",
-  },
-  {
-    id: "proton",
-    label: "Proton Mail",
-    domain: "proton.me",
-    color: "bg-[#6D4AFF]/20 text-[#A78BFA] border border-[#6D4AFF]/40",
-    note: "Gizlilik odaklı",
-  },
-] as const;
+export interface MemberRow {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  isVerified: boolean;
+  birthDate?: string | null;
+  gender?: string | null;
+  createdAt?: string;
+}
 
 export function LicenseLookupModal() {
   const {
@@ -68,14 +59,23 @@ export function LicenseLookupModal() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [provider, setProvider] =
-    useState<(typeof MAIL_PROVIDERS)[number]["id"]>("google");
   const [authLoading, setAuthLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [consentError, setConsentError] = useState(false);
+  // E-posta onaylı tek üyelik akışı
+  const [authStep, setAuthStep] = useState<"form" | "code">("form");
+  const [codeInput, setCodeInput] = useState("");
+  const [codeNotice, setCodeNotice] = useState("");
+  const [fallbackCode, setFallbackCode] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState("");
 
-  const [adminTab, setAdminTab] = useState<"add" | "manage" | "backup">("add");
+  const [adminTab, setAdminTab] = useState<
+    "add" | "manage" | "requests" | "members" | "backup"
+  >("add");
   const [productsList, setProductsList] = useState<Product[]>([]);
+  const [membersList, setMembersList] = useState<MemberRow[]>([]);
+  const [requestsAdminList, setRequestsAdminList] = useState<GameRequest[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [keyInput, setKeyInput] = useState("");
   const [checkingKey, setCheckingKey] = useState(false);
@@ -112,11 +112,55 @@ export function LicenseLookupModal() {
     }
   }, [adminFetch]);
 
+  const fetchMembersForAdmin = useCallback(async () => {
+    try {
+      const res = await adminFetch("/api/auth?admin=1");
+      const data = await res.json();
+      if (Array.isArray(data.users)) setMembersList(data.users);
+    } catch {
+      // ignore
+    }
+  }, [adminFetch]);
+
+  const fetchRequestsForAdmin = useCallback(async () => {
+    try {
+      const res = await adminFetch("/api/wishlist-requests");
+      const data = await res.json();
+      if (Array.isArray(data.requests)) setRequestsAdminList(data.requests);
+    } catch {
+      // ignore
+    }
+  }, [adminFetch]);
+
+  const handleDeleteRequest = async (id: number) => {
+    try {
+      const res = await adminFetch(`/api/wishlist-requests?id=${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setRequestsAdminList((prev) => prev.filter((r) => r.id !== id));
+        showToast("İstek listeden kaldırıldı.");
+      } else {
+        showToast("İstek silinemedi.");
+      }
+    } catch {
+      showToast("İstek silinemedi.");
+    }
+  };
+
   useEffect(() => {
     if (isAnyAdminOpen && isAdmin) {
       fetchProductsForAdmin();
+      fetchMembersForAdmin();
+      fetchRequestsForAdmin();
     }
-  }, [isAnyAdminOpen, isAdmin, fetchProductsForAdmin]);
+  }, [
+    isAnyAdminOpen,
+    isAdmin,
+    fetchProductsForAdmin,
+    fetchMembersForAdmin,
+    fetchRequestsForAdmin,
+  ]);
 
   const handleCloseAdmin = () => {
     closeAdminModal();
@@ -131,9 +175,9 @@ export function LicenseLookupModal() {
     setCheckingKey(false);
   };
 
-  const handleProviderAuth = async (
-    selected: (typeof MAIL_PROVIDERS)[number]["id"]
-  ) => {
+  /** Üyelik/onay kodu talebi — üyenin girdiği e-postaya kod gider */
+  const handleRequestCode = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!termsAccepted) {
       setConsentError(true);
       showToast(
@@ -141,41 +185,76 @@ export function LicenseLookupModal() {
       );
       return;
     }
+    const typed = email.trim().toLowerCase();
+    if (!typed.includes("@") || !typed.includes(".")) {
+      showToast("Geçerli bir e-posta adresi yaz.");
+      return;
+    }
     setConsentError(false);
-    setProvider(selected);
     setAuthLoading(true);
     try {
-      const found = MAIL_PROVIDERS.find((p) => p.id === selected);
-      const typed = email.trim().toLowerCase();
-      const finalEmail = typed.includes("@")
-        ? typed
-        : `oyuncu${Math.floor(1000 + Math.random() * 9000)}@${
-            found?.domain || "gmail.com"
-          }`;
-      const finalName =
-        name.trim() || finalEmail.split("@")[0].replace(/[._-]/g, " ");
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          provider: selected,
-          name: finalName,
-          email: finalEmail,
-          gamerTag:
-            finalName.toLowerCase().replace(/[^a-z0-9]/g, "") || "oyuncu_tr",
+          action: "register",
+          email: typed,
+          name: name.trim(),
+          birthDate: birthDate || null,
+          gender: gender || null,
           termsAccepted: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFallbackCode(data.fallbackCode || "");
+        setCodeNotice(
+          data.mailSent
+            ? `6 haneli onay kodu ${typed} adresine gönderildi. (Spam klasörünü de kontrol et)`
+            : `Mail sistemi ayarlanmadığından kodun doğrudan burada gösteriliyor.`
+        );
+        setAuthStep("code");
+      } else {
+        showToast(data.error || "Kod gönderilemedi.");
+      }
+    } catch {
+      showToast("Kod gönderilemedi.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  /** Kodu doğrula → üyelik aktif */
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    try {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify",
+          email: email.trim().toLowerCase(),
+          code: codeInput.trim(),
         }),
       });
       const data = await res.json();
       if (res.ok && data.user) {
         setCurrentUser(data.user);
-        showToast(`Hoş geldin ${data.user.name}! Artık indirebilirsin.`);
+        setName("");
+        setEmail("");
+        setCodeInput("");
+        setBirthDate("");
+        setGender("");
+        setAuthStep("form");
+        setFallbackCode("");
+        showToast(`Merhaba ${data.user.name}! Üyeliğin aktif — indirme linkleri açıldı.`);
         closeAuthModal();
       } else {
-        showToast(data.error || "Giriş yapılamadı.");
+        showToast(data.error || "Kod doğrulanamadı.");
       }
     } catch {
-      showToast("Giriş yapılamadı.");
+      showToast("Kod doğrulanamadı.");
     } finally {
       setAuthLoading(false);
     }
@@ -363,7 +442,7 @@ export function LicenseLookupModal() {
                   ÜCRETSİZ ÜYELİK
                 </span>
                 <h2 className="font-display text-lg font-bold text-[#F8FAFC]">
-                  Google • Yandex • Proton ile Giriş
+                  Üye Girişi — E-posta ile Güvenli Giriş
                 </h2>
               </div>
               <button
@@ -411,126 +490,173 @@ export function LicenseLookupModal() {
               ) : (
                 <>
                   <p className="text-xs text-[#94A3B8] leading-relaxed">
-                    Aşağıdaki butonlardan birine bas, üyeliğin{" "}
-                    <strong className="text-[#F8FAFC]">anında</strong> açılsın.
-                    Şifre yok, onay maili yok. Üye olunca{" "}
-                    <strong className="text-[#10B981]">
-                      Resonance: A Plague Tale Legacy
-                    </strong>{" "}
-                    dublajını ücretsiz indirebilirsin.
+                    E-postanı yaz, üyeliğin{" "}
+                    <strong className="text-[#F8FAFC]">e-postana gelen 6 haneli kodla</strong>{" "}
+                    onaylanır. Kod onaylanınca{" "}
+                    <strong className="text-[#F8FAFC]">indirme linkleri anında açılır</strong>
+                    {" "}ve yeni yamalarda e-posta ile bilgilendirilirsin.
                   </p>
 
-                  <label
-                    className={`flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all border ${
-                      consentError
-                        ? "bg-[#EF4444]/10 border-[#EF4444]/50"
-                        : termsAccepted
-                        ? "bg-[#10B981]/10 border-[#10B981]/40"
-                        : "bg-[#13151C] border-white/15"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={termsAccepted}
-                      onChange={(e) => {
-                        setTermsAccepted(e.target.checked);
-                        if (e.target.checked) setConsentError(false);
-                      }}
-                      className="mt-0.5 w-4 h-4 shrink-0 accent-[#10B981] cursor-pointer"
-                    />
-                    <span className="text-xs text-[#94A3B8] leading-relaxed">
-                      <a
-                        href="/sozlesme"
-                        target="_blank"
-                        className="text-[#10B981] underline font-semibold"
-                      >
-                        Üyelik Sözleşmesi
-                      </a>{" "}
-                      ve{" "}
-                      <a
-                        href="/sozlesme#kvkk"
-                        target="_blank"
-                        className="text-[#10B981] underline font-semibold"
-                      >
-                        KVKK Aydınlatma Metni
-                      </a>
-                      &apos;ni okudum, kabul ediyorum.{" "}
-                      <span className="text-[#EF4444]">*</span>
-                    </span>
-                  </label>
-
-                  {consentError && (
-                    <div className="p-3 rounded-xl bg-[#EF4444]/15 border border-[#EF4444]/30 text-xs text-[#EF4444] flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>
-                        Üye olabilmek için yukarıdaki kutuyu işaretlemelisin.
-                      </span>
-                    </div>
-                  )}
-
-                  <div
-                    className={`space-y-2.5 transition-opacity ${
-                      termsAccepted ? "opacity-100" : "opacity-50"
-                    }`}
-                  >
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-[#94A3B8]">
-                      {termsAccepted
-                        ? "✓ Onay alındı — giriş yöntemini seç"
-                        : "Önce sözleşmeyi onayla"}
-                    </div>
-                    {MAIL_PROVIDERS.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        disabled={authLoading}
-                        onClick={() => handleProviderAuth(p.id)}
-                        className={`w-full h-13 rounded-xl font-display font-extrabold text-xs sm:text-sm flex items-center justify-between px-5 shadow cursor-pointer disabled:opacity-60 ${p.color}`}
-                      >
-                        <span className="flex items-center gap-2.5">
-                          {authLoading && provider === p.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <LogIn className="w-4 h-4" />
-                          )}
-                          <span>{p.label} ile Üye Ol</span>
-                        </span>
-                        <span className="font-mono text-[10px] opacity-70">
-                          {p.note}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <details className="group">
-                    <summary className="cursor-pointer font-mono text-[11px] uppercase text-[#94A3B8] hover:text-[#F8FAFC] select-none">
-                      İsteğe bağlı: adımı ve e-postamı kendim yazayım ▾
-                    </summary>
-                    <div className="space-y-2.5 pt-3">
-                      <div className="relative">
-                        <User className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="text"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="Oyuncu adın (boş bırakabilirsin)"
-                          className="w-full h-11 pl-10 pr-3 rounded-xl bg-[#13151C] border border-white/15 text-xs text-[#F8FAFC]"
-                        />
-                      </div>
+                  {authStep === "form" ? (
+                    <form onSubmit={handleRequestCode} className="space-y-3">
                       <div className="relative">
                         <Mail className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="email"
+                          required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          placeholder="ornek@gmail.com (boş bırakabilirsin)"
+                          placeholder="E-posta adresin (örn. ornek@gmail.com)"
                           className="w-full h-11 pl-10 pr-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC]"
                         />
                       </div>
-                      <p className="font-mono text-[10px] text-[#64748B]">
-                        Boş bırakırsan sana otomatik bir üye adresi oluşturulur.
-                      </p>
-                    </div>
-                  </details>
+                      <div className="relative">
+                        <User className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          required
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="İsmin *"
+                          className="w-full h-11 pl-10 pr-3 rounded-xl bg-[#13151C] border border-white/15 text-xs text-[#F8FAFC]"
+                        />
+                      </div>
+                      <details className="group">
+                        <summary className="cursor-pointer font-mono text-[11px] uppercase text-[#94A3B8] hover:text-[#F8FAFC] select-none">
+                          İsteğe bağlı bilgiler (doğum tarihi, cinsiyet) ▾
+                        </summary>
+                        <div className="grid grid-cols-2 gap-2.5 pt-3">
+                          <div className="relative">
+                            <Calendar className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="date"
+                              value={birthDate}
+                              onChange={(e) => setBirthDate(e.target.value)}
+                              className="w-full h-11 pl-10 pr-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC]"
+                            />
+                          </div>
+                          <select
+                            value={gender}
+                            onChange={(e) => setGender(e.target.value)}
+                            className="w-full h-11 px-3 rounded-xl bg-[#13151C] border border-white/15 text-xs text-[#F8FAFC]"
+                          >
+                            <option value="">Cinsiyet (opsiyonel)</option>
+                            <option value="erkek">Erkek</option>
+                            <option value="kadin">Kadın</option>
+                            <option value="belirtmek_istemiyor">Belirtmek istemiyorum</option>
+                          </select>
+                        </div>
+                      </details>
+
+                      <label
+                        className={`flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all border ${
+                          consentError
+                            ? "bg-[#EF4444]/10 border-[#EF4444]/50"
+                            : termsAccepted
+                            ? "bg-[#10B981]/10 border-[#10B981]/40"
+                            : "bg-[#13151C] border-white/15"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={termsAccepted}
+                          onChange={(e) => {
+                            setTermsAccepted(e.target.checked);
+                            if (e.target.checked) setConsentError(false);
+                          }}
+                          className="mt-0.5 w-4 h-4 shrink-0 accent-[#10B981] cursor-pointer"
+                        />
+                        <span className="text-xs text-[#94A3B8] leading-relaxed">
+                          <a
+                            href="/sozlesme"
+                            target="_blank"
+                            className="text-[#10B981] underline font-semibold"
+                          >
+                            Üyelik Sözleşmesi
+                          </a>{" "}
+                          ve{" "}
+                          <a
+                            href="/sozlesme#kvkk"
+                            target="_blank"
+                            className="text-[#10B981] underline font-semibold"
+                          >
+                            KVKK Aydınlatma Metni
+                          </a>
+                          &apos;ni okudum, kabul ediyorum.{" "}
+                          <span className="text-[#EF4444]">*</span>
+                        </span>
+                      </label>
+
+                      {consentError && (
+                        <div className="p-3 rounded-xl bg-[#EF4444]/15 border border-[#EF4444]/30 text-xs text-[#EF4444] flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0" />
+                          <span>
+                            Üye olabilmek için yukarıdaki kutuyu işaretlemelisin.
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={authLoading}
+                        className="w-full h-13 rounded-xl bg-[#10B981] text-[#0B0C10] font-display font-extrabold text-sm flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60"
+                      >
+                        {authLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <KeyRound className="w-5 h-5" />
+                        )}
+                        <span>Üyelik Onay Kodu Gönder</span>
+                      </button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleVerifyCode} className="space-y-3">
+                      <div className="p-3.5 rounded-xl bg-[#10B981]/10 border border-[#10B981]/30 text-xs text-[#10B981]">
+                        {codeNotice}
+                      </div>
+                      {fallbackCode && (
+                        <div className="p-3.5 rounded-xl bg-[#F59E0B]/10 border border-[#F59E0B]/40 text-center">
+                          <div className="font-mono text-[10px] uppercase text-[#F59E0B] mb-1">
+                            E-posta henüz bağlanmadı — kodun
+                          </div>
+                          <div className="font-mono text-2xl font-extrabold tracking-[6px] text-[#F59E0B]">
+                            {fallbackCode}
+                          </div>
+                        </div>
+                      )}
+                      <input
+                        type="text"
+                        required
+                        inputMode="numeric"
+                        maxLength={6}
+                        value={codeInput}
+                        onChange={(e) =>
+                          setCodeInput(e.target.value.replace(/\D/g, ""))
+                        }
+                        placeholder="______"
+                        className="w-full h-14 px-4 rounded-xl bg-[#13151C] border border-white/15 text-center font-mono text-2xl font-extrabold tracking-[10px] text-[#F8FAFC]"
+                      />
+                      <button
+                        type="submit"
+                        disabled={authLoading}
+                        className="w-full h-13 rounded-xl bg-[#10B981] text-[#0B0C10] font-display font-extrabold text-sm flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60"
+                      >
+                        {authLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-5 h-5" />
+                        )}
+                        <span>Kodu Doğrula & Üyeliği Aktifleştir</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAuthStep("form")}
+                        className="w-full py-2 font-mono text-[11px] text-[#94A3B8] hover:text-white cursor-pointer"
+                      >
+                        ← E-postayı değiştir / yeni kod iste
+                      </button>
+                    </form>
+                  )}
                 </>
               )}
             </div>
@@ -612,39 +738,61 @@ export function LicenseLookupModal() {
               </form>
             ) : (
               <>
-                <div className="grid grid-cols-3 bg-[#0B0C10] border-b border-white/10 font-mono text-xs">
+                <div className="grid grid-cols-5 bg-[#0B0C10] border-b border-white/10 font-mono text-[11px]">
                   <button
                     type="button"
                     onClick={() => setAdminTab("add")}
-                    className={`py-3.5 px-4 font-bold border-b-2 transition-colors cursor-pointer ${
+                    className={`py-3.5 px-2 font-bold border-b-2 transition-colors cursor-pointer ${
                       adminTab === "add"
                         ? "border-[#E11D48] text-[#F8FAFC] bg-[#13151C]"
                         : "border-transparent text-[#94A3B8] hover:text-white"
                     }`}
                   >
-                    + Yeni AI Dublaj Ekle
+                    + Ekle
                   </button>
                   <button
                     type="button"
                     onClick={() => setAdminTab("manage")}
-                    className={`py-3.5 px-4 font-bold border-b-2 transition-colors cursor-pointer ${
+                    className={`py-3.5 px-2 font-bold border-b-2 transition-colors cursor-pointer ${
                       adminTab === "manage"
                         ? "border-[#E11D48] text-[#F8FAFC] bg-[#13151C]"
                         : "border-transparent text-[#94A3B8] hover:text-white"
                     }`}
                   >
-                    Yamalar & Linkler ({productsList.length})
+                    Yamalar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdminTab("requests")}
+                    className={`py-3.5 px-2 font-bold border-b-2 transition-colors cursor-pointer ${
+                      adminTab === "requests"
+                        ? "border-[#E11D48] text-[#F8FAFC] bg-[#13151C]"
+                        : "border-transparent text-[#94A3B8] hover:text-white"
+                    }`}
+                  >
+                    İstekler ({requestsAdminList.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdminTab("members")}
+                    className={`py-3.5 px-2 font-bold border-b-2 transition-colors cursor-pointer ${
+                      adminTab === "members"
+                        ? "border-[#E11D48] text-[#F8FAFC] bg-[#13151C]"
+                        : "border-transparent text-[#94A3B8] hover:text-white"
+                    }`}
+                  >
+                    Üyeler ({membersList.length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setAdminTab("backup")}
-                    className={`py-3.5 px-4 font-bold border-b-2 transition-colors cursor-pointer ${
+                    className={`py-3.5 px-2 font-bold border-b-2 transition-colors cursor-pointer ${
                       adminTab === "backup"
                         ? "border-[#E11D48] text-[#F8FAFC] bg-[#13151C]"
                         : "border-transparent text-[#94A3B8] hover:text-white"
                     }`}
                   >
-                    Yedek & Çıkış
+                    Yedek
                   </button>
                 </div>
 
@@ -958,6 +1106,146 @@ export function LicenseLookupModal() {
                             </div>
                           </div>
                         ))
+                      )}
+                    </div>
+                  )}
+
+                  {adminTab === "requests" && (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl bg-[#13151C] border border-white/10 space-y-1.5">
+                        <div className="flex items-center gap-2 font-display text-sm font-bold text-[#F8FAFC]">
+                          <ThumbsUp className="w-4 h-4 text-[#F59E0B]" />
+                          <span>Oyuncu İstekleri — Gerçek Veriler</span>
+                        </div>
+                        <p className="text-xs text-[#94A3B8] leading-relaxed">
+                          Üyelerin istek listesinden eklediği oyunlar ve
+                          verdikleri oylar. En çok oyu alan istek sıradaki AI
+                          dublaj adayıdır. Buradaki hiçbir veri uydurma değildir.
+                        </p>
+                      </div>
+
+                      {requestsAdminList.length === 0 ? (
+                        <div className="p-6 text-center font-mono text-xs text-[#64748B]">
+                          Henüz istek yok. Üyeler "İstek Listesi & Oy Ver"
+                          bölümünden oyun ekledikçe burada listelenecek.
+                        </div>
+                      ) : (
+                        requestsAdminList
+                          .slice()
+                          .sort((a, b) => b.votes - a.votes)
+                          .map((req) => (
+                            <div
+                              key={req.id}
+                              className="p-4 rounded-xl bg-[#13151C] border border-white/10 space-y-2"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="px-2 py-0.5 rounded bg-[#F59E0B]/15 text-[#F59E0B] font-mono text-[10px] font-bold">
+                                    {req.votes} OY
+                                  </span>
+                                  <span className="font-display text-sm font-bold text-[#F8FAFC]">
+                                    {req.gameTitle}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded bg-white/10 text-[#94A3B8] font-mono text-[10px]">
+                                    {req.status}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteRequest(req.id)}
+                                  className="h-8 px-3 rounded-lg bg-[#EF4444]/15 hover:bg-[#EF4444]/25 border border-[#EF4444]/30 text-[#EF4444] font-mono text-[10px] font-bold cursor-pointer inline-flex items-center gap-1.5"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  Sil
+                                </button>
+                              </div>
+                              <p className="text-xs text-[#94A3B8] leading-relaxed">
+                                &ldquo;{req.note}&rdquo;
+                              </p>
+                              <div className="font-mono text-[10px] text-[#64748B]">
+                                İsteyen: {req.requesterName}
+                                {req.requesterProvider
+                                  ? ` (${req.requesterProvider})`
+                                  : ""}{" "}
+                                • {req.aiDifficulty} •{" "}
+                                {req.createdAt
+                                  ? new Date(req.createdAt).toLocaleDateString(
+                                      "tr-TR"
+                                    )
+                                  : ""}
+                              </div>
+                            </div>
+                          ))
+                      )}
+                    </div>
+                  )}
+
+                  {adminTab === "members" && (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl bg-[#13151C] border border-white/10 space-y-1.5">
+                        <div className="flex items-center gap-2 font-display text-sm font-bold text-[#F8FAFC]">
+                          <Users className="w-4 h-4 text-[#10B981]" />
+                          <span>Üyeler — Gerçek Üye Listesi</span>
+                        </div>
+                        <p className="text-xs text-[#94A3B8] leading-relaxed">
+                          E-posta onaylı üyeler. Onaylı üyeler indirme
+                          linklerine erişebilir ve yeni yamalarda otomatik
+                          e-posta bildirimi alır.
+                        </p>
+                      </div>
+
+                      {membersList.length === 0 ? (
+                        <div className="p-6 text-center font-mono text-xs text-[#64748B]">
+                          Henüz üye yok. Üyelikler "Üye Girişi" penceresinden
+                          e-posta onayı ile açıldıkça burada listelenecek.
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto rounded-xl border border-white/10">
+                          <table className="w-full font-mono text-[11px]">
+                            <thead>
+                              <tr className="bg-[#13151C] text-left text-[#64748B] uppercase">
+                                <th className="px-3 py-2.5">Ad</th>
+                                <th className="px-3 py-2.5">E-posta</th>
+                                <th className="px-3 py-2.5">Durum</th>
+                                <th className="px-3 py-2.5">Rol</th>
+                                <th className="px-3 py-2.5">Tarih</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {membersList.map((m) => (
+                                <tr
+                                  key={m.id}
+                                  className="border-t border-white/10 text-[#94A3B8]"
+                                >
+                                  <td className="px-3 py-2.5 font-bold text-[#F8FAFC]">
+                                    {m.name}
+                                  </td>
+                                  <td className="px-3 py-2.5">{m.email}</td>
+                                  <td className="px-3 py-2.5">
+                                    {m.isVerified ? (
+                                      <span className="text-[#10B981] flex items-center gap-1">
+                                        <MailCheck className="w-3.5 h-3.5" />
+                                        ONAYLI
+                                      </span>
+                                    ) : (
+                                      <span className="text-[#F59E0B]">
+                                        ONAY BEKLİYOR
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2.5">{m.role}</td>
+                                  <td className="px-3 py-2.5">
+                                    {m.createdAt
+                                      ? new Date(m.createdAt).toLocaleDateString(
+                                          "tr-TR"
+                                        )
+                                      : "-"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       )}
                     </div>
                   )}

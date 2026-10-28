@@ -10,11 +10,7 @@ import {
   type Order,
   type GameRequest,
 } from "./schema";
-import {
-  INITIAL_PRODUCTS,
-  INITIAL_REVIEWS,
-  INITIAL_GAME_REQUESTS,
-} from "./seed-data";
+import { INITIAL_PRODUCTS } from "./seed-data";
 import { eq, desc, asc } from "drizzle-orm";
 
 let isInitialized = false;
@@ -151,28 +147,14 @@ export async function ensureDatabaseSeeded(): Promise<void> {
           .returning({ id: products.id, slug: products.slug });
 
         if (insertedProducts.length > 0) {
-          const idMap = new Map<number, number>();
-          insertedProducts.forEach((p, idx) => {
-            idMap.set(idx + 1, p.id);
-          });
-
-          const mappedReviews = INITIAL_REVIEWS.map((r) => ({
-            ...r,
-            productId: idMap.get(r.productId) ?? insertedProducts[0].id,
-          }));
-
-          await db.insert(reviews).values(mappedReviews);
+          // Ürünler eklenir ama SAHTE (demo) yorumlar artık eklenmez.
+          // Sitede yalnızca üyelerin gerçekten yazdığı yorumlar görünür.
+          void insertedProducts;
         }
       }
 
-      const existingRequests = await db
-        .select({ id: gameRequests.id })
-        .from(gameRequests)
-        .limit(1);
-
-      if (existingRequests.length === 0) {
-        await db.insert(gameRequests).values(INITIAL_GAME_REQUESTS);
-      }
+      // İstek listesi SEED EDİLMEZ: buraya yalnızca üyelerin gerçekten
+      // eklediği oyun istekleri kaydedilir, sahte/demo veri girilmez.
 
       const existingUsers = await db
         .select({ id: users.id })

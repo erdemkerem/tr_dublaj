@@ -119,6 +119,13 @@ export const users = pgTable("users", {
   provider: text("provider").notNull().default("google"), // "google" | "github" | "discord" | "email"
   gamerTag: text("gamer_tag").notNull(),
   role: text("role").notNull().default("member"), // "member" | "admin"
+  // E-posta onay: kod 15 dakika geçerlidir — onaylanmadan üyelik aktif olmaz
+  isVerified: boolean("is_verified").notNull().default(false),
+  verificationCode: text("verification_code"),
+  verificationExpiresAt: timestamp("verification_expires_at"),
+  // İsteğe bağlı profil bilgileri
+  birthDate: text("birth_date"),
+  gender: text("gender"), // "erkek" | "kadin" | "belirtmek_istemiyor"
   downloadsUnlocked: integer("downloads_unlocked").notNull().default(0),
   // Üyelik sözleşmesi / KVKK onayı — onaysız kayıt açılmaz
   termsAccepted: boolean("terms_accepted").notNull().default(false),
@@ -130,7 +137,7 @@ export const gameRequests = pgTable("game_requests", {
   id: serial("id").primaryKey(),
   gameTitle: text("game_title").notNull(),
   requesterName: text("requester_name").notNull(),
-  requesterProvider: text("requester_provider").notNull().default("Google Üyesi"),
+  requesterProvider: text("requester_provider").notNull().default(""),
   note: text("note").notNull(),
   aiDifficulty: text("ai_difficulty").notNull().default("Orta • ~25.000 Satır"),
   status: text("status").notNull().default("Oylanıyor"), // "Oylanıyor" | "AI Ses Eğitiliyor" | "Sıraya Alındı"

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { gameRequests } from "@/db/schema";
 import { ensureDatabaseSeeded, getAllGameRequests } from "@/db/ensure-seed";
+import { isAdminRequest } from "@/lib/admin";
 import { eq, sql } from "drizzle-orm";
 
 export async function GET() {
@@ -24,9 +25,7 @@ export async function POST(request: NextRequest) {
 
     const gameTitle = String(body.gameTitle || "").trim();
     const requesterName = String(body.requesterName || "Anonim Oyuncu").trim();
-    const requesterProvider = String(
-      body.requesterProvider || "Google Üyesi"
-    ).trim();
+    const requesterProvider = String(body.requesterProvider || "").trim();
     const note = String(
       body.note || "Bu oyun için AI Türkçe dublaj yaması bekliyoruz!"
     ).trim();
@@ -83,5 +82,30 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error("PATCH /api/wishlist-requests error:", error);
     return NextResponse.json({ error: "Oy verilemedi." }, { status: 500 });
+  }
+}
+
+/** Sadece site sahibi: istek silme (id) veya durum/difficulty güncelleme */
+export async function DELETE(request: NextRequest) {
+  try {
+    await ensureDatabaseSeeded();
+    if (!isAdminRequest(request)) {
+      return NextResponse.json(
+        { error: "Yetkisiz." },
+        { status: 401 }
+      );
+    }
+    const { searchParams } = new URL(request.url);
+    const id = Number(searchParams.get("id"));
+
+    if (!id) {
+      return NextResponse.json({ error: "Geçersiz ID" }, { status: 400 });
+    }
+
+    await db.delete(gameRequests).where(eq(gameRequests.id, id));
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("DELETE /api/wishlist-requests error:", error);
+    return NextResponse.json({ error: "İstek silinemedi." }, { status: 500 });
   }
 }

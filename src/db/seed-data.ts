@@ -1,4 +1,4 @@
-import type { NewProduct, NewReview, NewGameRequest } from "./schema";
+import type { NewProduct, NewReview } from "./schema";
 
 export const INITIAL_PRODUCTS: NewProduct[] = [
   {
@@ -8,7 +8,7 @@ export const INITIAL_PRODUCTS: NewProduct[] = [
     subtitle:
       "Sophia'nın 1334 Venedik'ten Minotor Adası'na uzanan macerası; RVC v2 + ElevenLabs AI ses klonlama ile %100 Ücretsiz Türkçe Dublaj!",
     description:
-      "A Plague Tale: Requiem'in 15 yıl öncesinde geçen Resonance: A Plague Tale Legacy için yapay zekâ (AI Ses Klonlama & RVC v2 + XTTS) teknolojisiyle hazırlanan ilk tam Türkçe dublaj yaması yayında! 'Denizlerin Akrebi' Sophia'nın orijinal İngilizce ses tonu (Anna Demetriou) ve duygusal vurguları yapay zekâ ile birebir korunarak Türkçeye aktarıldı. Minotor Adası'ndaki (Minotaur's Island) tüm diyaloglar, Minos uygarlığı geçmiş yankıları ve Zouna motoru arayüz metinleri kırılmaz Türkçe fontlarla tamamen ücretsiz olarak sunulmaktadır. İndirmek için üye olup kısa reklam linkini geçerek doğrudan Google Drive, GitHub Releases veya MediaFire barındırıcısına yönlenebilirsiniz.",
+      "A Plague Tale: Requiem'in 15 yıl öncesinde geçen Resonance: A Plague Tale Legacy için yapay zekâ (AI Ses Klonlama & RVC v2 + XTTS) teknolojisiyle hazırlanan ilk tam Türkçe dublaj yaması yayında! 'Denizlerin Akrebi' Sophia'nın orijinal İngilizce ses tonu (Anna Demetriou) ve duygusal vurguları yapay zekâ ile birebir korunarak Türkçeye aktarıldı. Minotor Adası'ndaki (Minotaur's Island) tüm diyaloglar, Minos uygarlığı geçmiş yankıları ve Zouna motoru arayüz metinleri kırılmaz Türkçe fontlarla tamamen ücretsiz olarak sunulmaktadır. İndirmek için üye olup barındırıcıdan tam hızda indirebilirsiniz.",
     status: "ready",
     progressPercent: 100,
     aiModelInfo: "ElevenLabs AI Dubbing + RVC v2 (Sophia Orijinal Ses Klonu) + Whisper-Large Zamanlama",
@@ -149,15 +149,15 @@ export const INITIAL_PRODUCTS: NewProduct[] = [
       },
     ],
     features: [
-      "%100 Ücretsiz: Sadece kısa reklam linkini geçerek Google Drive, GitHub veya MediaFire üzerinden tam hızda indirin",
+      "%100 Ücretsiz: Üye girişi sonrası barındırıcıdan tam hızda indirin",
       "Yapay Zekâ Ses Klonlama: Karakterlerin orijinal ses rengi ve duygusu bozulmadan Türkçe konuşur",
       "Otomatik Ses-Altyazı Senkronu: Orijinal konuşma sürelerine (ms) sıkıştırılmış/uzatılmış doğal AI ses dosyaları",
       "Zouna Engine Uyumlu Türkçe Font: Ğ, Ü, Ş, İ, Ö, Ç harflerinde kutucuk hatası olmadan tam menü ve altyazı çevirisi",
       "Kolay Kurulum: İndirdiğiniz arşivdeki dosyaları oyun klasörüne atmanız yeterli (Steam & Game Pass uyumlu)",
     ],
     installNotes: [
-      "Sitemize Google hesabınızla (veya üye olarak) giriş yapın ve 'Reklam Geç & Ücretsiz İndir' butonuna tıklayın.",
-      "Açılan 5 saniyelik destek reklamını geçtikten sonra Google Drive, GitHub Releases veya MediaFire barındırıcısından .zip dosyasını indirin.",
+      "Sitemize üye olarak giriş yapın ve 'Ücretsiz İndir' butonuna tıklayın.",
+      "Barındırıcıdan .zip dosyasını indirin.",
       "İndirdiğiniz arşiv içindeki dosyaları 'Resonance - A Plague Tale Legacy' ana oyun klasörüne çıkartın ve oyuna girin!",
     ],
     isFeatured: true,
@@ -175,7 +175,7 @@ export const INITIAL_PRODUCTS: NewProduct[] = [
     subtitle:
       "Amicia, Hugo ve Sophia'nın ana hikayesi için RVC v2 yapay zekâ Türkçe seslendirme eğitimi devam ediyor. İstek listesine ekleyip oy verin!",
     description:
-      "Resonance: A Plague Tale Legacy dublajımızın ardından serinin efsanevi oyunu A Plague Tale: Requiem için AI ses klonlama ve diyalog zamanlama çalışmalarına başladık! Amicia, Hugo, Lucas ve Sophia karakterlerinin orijinal seslerini koruyarak hazırladığımız bu yama tamamlandığında yine %100 ücretsiz olarak reklam linki + Google Drive / GitHub üzerinden paylaşılacaktır. İstek listenize ekleyerek öncelik kazanmasını sağlayabilirsiniz.",
+      "Resonance: A Plague Tale Legacy dublajımızın ardından serinin efsanevi oyunu A Plague Tale: Requiem için AI ses klonlama ve diyalog zamanlama çalışmalarına başladık! Amicia, Hugo, Lucas ve Sophia karakterlerinin orijinal seslerini koruyarak hazırladığımız bu yama tamamlandığında yine %100 ücretsiz olarak yayınlanacaktır. İstek listenize ekleyerek öncelik kazanmasını sağlayabilirsiniz.",
     status: "in_progress",
     progressPercent: 65,
     aiModelInfo: "RVC v2 Ses Eğitimi (%65 Tamamlandı) + XTTS-v2",
@@ -234,7 +234,7 @@ export const INITIAL_PRODUCTS: NewProduct[] = [
       },
     ],
     features: [
-      "Tamamlandığında %100 Ücretsiz olarak Google Drive ve GitHub üzerinden yayınlanacak",
+      "Tamamlandığında %100 Ücretsiz olarak yayınlanacak",
       "Resonance: A Plague Tale Legacy'deki Sophia AI ses modeliyle birebir uyumlu devamlılık",
     ],
     installNotes: [
@@ -468,7 +468,7 @@ export const INITIAL_PRODUCTS: NewProduct[] = [
       },
     ],
     features: [
-      "Tamamen ücretsiz reklam destekli dağıtım",
+      "Tamamen ücretsiz dağıtım",
     ],
     installNotes: [
       "İstek listenize ekleyerek bu oyuna öncelik verilmesini sağlayabilirsiniz.",
@@ -492,7 +492,7 @@ export const INITIAL_REVIEWS: Omit<NewReview, "id" | "createdAt">[] = [
     rating: 5,
     title: "Resonance: A Plague Tale Legacy AI dublajı inanılmaz doğal olmuş!",
     comment:
-      "Yapay zeka ile yapıldığını bilmesem gerçek seslendirme sanırdım. Sophia'nın orijinal İngilizce ses tonu hiç bozulmadan Türkçe konuşuyor. Üstelik tamamen ücretsiz olması, sadece 5 saniyelik reklam geçip Google Drive'dan tam hızda indirmemiz harika. Eline emeğine sağlık!",
+      "Yapay zeka ile yapıldığını bilmesem gerçek seslendirme sanırdım. Sophia'nın orijinal İngilizce ses tonu hiç bozulmadan Türkçe konuşuyor. Üstelik tamamen ücretsiz olması ve üye olup saniyeler içinde tam hızda indirmemiz harika. Eline emeğine sağlık!",
     verifiedPurchase: true,
     playtimeHours: 18,
     helpfulCount: 94,
@@ -513,12 +513,12 @@ export const INITIAL_REVIEWS: Omit<NewReview, "id" | "createdAt">[] = [
   {
     productId: 1,
     authorName: "Baran T.",
-    gamerTag: "GitHubGamer",
+    gamerTag: "BaranT_TR",
     platform: "Steam",
     rating: 5,
-    title: "Google ile tek tıkla üye oldum, GitHub linkinden saniyesinde indi",
+    title: "Tek tıkla üye oldum, indirme saniyesinde başladı",
     comment:
-      "Paralı yama satmaya çalışan sitelerden bıkmıştık. Reklam tıklamasıyla yapımcıyı destekleyip ücretsiz indirme mantığı çok adil. Kurulumu da aşırı basit, klasöre atıp direkt Türkçe sesle oynadım.",
+      "Paralı yama satmaya çalışan sitelerden bıkmıştık. Ücretsiz indirme mantığı çok adil. Kurulumu da aşırı basit, klasöre atıp direkt Türkçe sesle oynadım.",
     verifiedPurchase: true,
     playtimeHours: 22,
     helpfulCount: 53,
@@ -535,44 +535,5 @@ export const INITIAL_REVIEWS: Omit<NewReview, "id" | "createdAt">[] = [
     verifiedPurchase: true,
     playtimeHours: 35,
     helpfulCount: 41,
-  },
-];
-
-export const INITIAL_GAME_REQUESTS: Omit<NewGameRequest, "id" | "createdAt">[] = [
-  {
-    gameTitle: "A Plague Tale: Requiem",
-    requesterName: "Melis D. (@SeaScorpion_Sophia)",
-    requesterProvider: "Google Üyesi",
-    note: "Resonance: A Plague Tale Legacy'deki Sophia AI sesi harika olmuş, Amicia ve Hugo için Requiem dublajı hemen gelsin!",
-    aiDifficulty: "Orta • ~32.000 Satır",
-    status: "AI Ses Eğitiliyor (%65)",
-    votes: 342,
-  },
-  {
-    gameTitle: "A Plague Tale: Innocence",
-    requesterName: "Kerem A. (@PlagueHunter_TR)",
-    requesterProvider: "Google Üyesi",
-    note: "Serinin ilk oyunu Innocence da AI Türkçe dublaj olursa tüm üçlemeyi Türkçe sesli bitirebiliriz.",
-    aiDifficulty: "Kolay-Orta • ~19.000 Satır",
-    status: "Sıraya Alındı",
-    votes: 218,
-  },
-  {
-    gameTitle: "Clair Obscur: Expedition 33",
-    requesterName: "Emirhan S. (@TurnBasedTR)",
-    requesterProvider: "GitHub Üyesi",
-    note: "Diyalogları ve sinematikleri AI ses klonlamaya çok uygun, istek listesine eklensin lütfen.",
-    aiDifficulty: "Orta • ~28.000 Satır",
-    status: "Oylanıyor",
-    votes: 189,
-  },
-  {
-    gameTitle: "Silent Hill 2 Remake",
-    requesterName: "Cemre Y. (@FogWalker)",
-    requesterProvider: "Google Üyesi",
-    note: "Az ama çok etkileyici diyalogları var, AI dublaj ile kısa sürede hazır olabilir!",
-    aiDifficulty: "Kolay • ~9.500 Satır",
-    status: "Oylanıyor",
-    votes: 276,
   },
 ];

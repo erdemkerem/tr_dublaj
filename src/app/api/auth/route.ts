@@ -2,18 +2,56 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { ensureDatabaseSeeded } from "@/db/ensure-seed";
-import { eq } from "drizzle-orm";
+import { ensureUserTableColumns } from "@/db/migrate";
+import { eq, desc } from "drizzle-orm";
+import { isAdminRequest } from "@/lib/admin";
+import {
+  sendMail,
+  generateVerificationCode,
+  membershipCodeEmailHtml,
+} from "@/lib/mailer";
 
-/** Üyelik için izin verilen sağlayıcılar (GitHub/Discord kaldırıldı). */
-const ALLOWED_PROVIDERS = ["google", "yandex", "proton"] as const;
+const CODE_TTL_MINUTES = 15;
 
-/** Profil bilgisi getir */
+type UserRow = typeof users.$inferSelect;
+
+const ALLOWED_GENDERS = ["erkek", "kadin", "belirtmek_istemiyor"] as const;
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+}
+
+/** Doğrulama kodu gizli: üyeye geri gönderilmez. */
+function publicUser(u: UserRow) {
+  const { verificationCode, verificationExpiresAt, ...rest } = u;
+  void verificationCode;
+  void verificationExpiresAt;
+  return rest;
+}
+
+/** Profil bilgisi getir / admin tüm üyeleri listeler */
 export async function GET(request: NextRequest) {
   try {
     await ensureDatabaseSeeded();
     const { searchParams } = new URL(request.url);
-    const email = searchParams.get("email")?.trim().toLowerCase();
 
+    // Yalnızca site sahibi: /api/auth?admin=1 + x-admin-key
+    if (searchParams.get("admin")) {
+      if (!isAdminRequest(request)) {
+        return NextResponse.json(
+          { error: "Yetkisiz. Üye listesi sadece site sahibine açıktır." },
+          { status: 401 }
+        );
+      }
+      const list = await db
+        .select()
+        .from(users)
+        .orderBy(desc(users.createdAt))
+        .limit(300);
+      return NextResponse.json({ users: list.map(publicUser) });
+    }
+
+    const email = searchParams.get("email")?.trim().toLowerCase();
     if (!email) {
       return NextResponse.json({ error: "E-posta gerekli." }, { status: 400 });
     }
@@ -25,38 +63,32 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (found.length === 0) {
-      return NextResponse.json(
-        { error: "Üyelik bulunamadı." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Üyelik bulunamadı." }, { status: 404 });
     }
 
-    return NextResponse.json({ user: found[0] });
+    return NextResponse.json({ user: publicUser(found[0]) });
   } catch (error) {
     console.error("GET /api/auth error:", error);
     return NextResponse.json({ error: "Profil alınamadı." }, { status: 500 });
   }
 }
 
-/** Üye ol / giriş yap — sözleşme onayı zorunlu */
+/**
+ * Üyelik akışı (tek profesyonel üyelik, ücretsiz):
+ *  action "register" → e-postaya 6 haneli onay kodu gider
+ *  action "verify"   → kod doğruysa üyelik aktif (indirme linkleri açılır)
+ */
 export async function POST(request: NextRequest) {
   try {
     await ensureDatabaseSeeded();
+    await ensureUserTableColumns();
     const body = await request.json();
-
-    const rawProvider = String(body.provider || "google").trim().toLowerCase();
-    const provider = (ALLOWED_PROVIDERS as readonly string[]).includes(
-      rawProvider
-    )
-      ? rawProvider
-      : "google";
+    const action = String(body.action || "register");
 
     const email = String(body.email || "").trim().toLowerCase();
-    const termsAccepted = Boolean(body.termsAccepted);
-
-    if (!email || !email.includes("@")) {
+    if (!isValidEmail(email)) {
       return NextResponse.json(
-        { error: "Geçerli bir e-posta adresi gerekli." },
+        { error: "Geçerli bir e-posta adresi yazman gerekir." },
         { status: 400 }
       );
     }
@@ -66,56 +98,124 @@ export async function POST(request: NextRequest) {
       .from(users)
       .where(eq(users.email, email))
       .limit(1);
+    const existingUser = existing.length ? existing[0] : null;
 
-    // Mevcut üye → tekrar giriş (onay zaten alınmış)
-    if (existing.length > 0) {
+    if (action === "register") {
+      // Yeni üyelikte sözleşme onayı zorunlu
+      if (!existingUser && !body.termsAccepted) {
+        return NextResponse.json(
+          {
+            error:
+              "Üyelik için Üyelik Sözleşmesi ve KVKK Aydınlatma Metni'ni onaylaman gerekir.",
+            needsConsent: true,
+          },
+          { status: 403 }
+        );
+      }
+
+      const name =
+        String(body.name || "").trim() ||
+        existingUser?.name ||
+        email.split("@")[0].replace(/[._-]/g, " ");
+
+      const birthDate =
+        String(body.birthDate || "").trim() || existingUser?.birthDate || null;
+      const rawGender = String(body.gender || "").trim();
+      const gender =
+        (ALLOWED_GENDERS as readonly string[]).includes(rawGender)
+          ? rawGender
+          : existingUser?.gender || null;
+
+      const code = generateVerificationCode();
+      const expiresAt = new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000);
+
+      if (existingUser) {
+        await db
+          .update(users)
+          .set({
+            name,
+            birthDate,
+            gender,
+            verificationCode: code,
+            verificationExpiresAt: expiresAt,
+          })
+          .where(eq(users.email, email));
+      } else {
+        await db.insert(users).values({
+          name,
+          email,
+          provider: "email",
+          gamerTag:
+            name.toLowerCase().replace(/[^a-z0-9]/g, "") || "oyuncu_tr",
+          role: "member",
+          isVerified: false,
+          verificationCode: code,
+          verificationExpiresAt: expiresAt,
+          birthDate,
+          gender,
+          termsAccepted: true,
+          termsAcceptedAt: new Date(),
+        });
+      }
+
+      const mail = await sendMail(
+        email,
+        "tr_dublaj — Üyelik Onay Kodu",
+        membershipCodeEmailHtml(name, code)
+      );
+
       return NextResponse.json({
-        user: existing[0],
-        isNew: false,
-        message: `Tekrar hoş geldin ${existing[0].name}!`,
+        ok: true,
+        email,
+        mailSent: mail.sent,
+        // Mail sağlayıcısı bağlanmadıysa codun ekranda gösterilir ki üye takılsın
+        fallbackCode: mail.sent ? undefined : code,
+        message: mail.sent
+          ? "Onay kodu e-postana gönderildi."
+          : "Mail sistemi henüz bağlanmadı — kodun ekranda gösteriliyor.",
       });
     }
 
-    // YENİ ÜYELİK → sözleşme onayı olmadan kayıt açılmaz
-    if (!termsAccepted) {
-      return NextResponse.json(
-        {
-          error:
-            "Üyelik oluşturmak için Üyelik Sözleşmesi ve KVKK Aydınlatma Metni'ni onaylamanız gerekir.",
-          needsConsent: true,
-        },
-        { status: 403 }
-      );
+    if (action === "verify") {
+      const code = String(body.code || "").trim();
+      if (!existingUser) {
+        return NextResponse.json(
+          { error: "Bu e-postayla üyelik bulunamadı." },
+          { status: 404 }
+        );
+      }
+      const valid =
+        existingUser.verificationCode === code &&
+        existingUser.verificationExpiresAt &&
+        new Date(existingUser.verificationExpiresAt).getTime() > Date.now();
+
+      if (!valid) {
+        return NextResponse.json(
+          { error: "Kod hatalı veya süresi geçmiş. Yeni kod isteyebilirsin." },
+          { status: 400 }
+        );
+      }
+
+      const [verified] = await db
+        .update(users)
+        .set({
+          isVerified: true,
+          verificationCode: null,
+          verificationExpiresAt: null,
+        })
+        .where(eq(users.email, email))
+        .returning();
+
+      return NextResponse.json({
+        user: publicUser(verified),
+        message: `Üyeliğin aktif, hoş geldin ${verified.name}!`,
+      });
     }
 
-    const name =
-      String(body.name || "").trim() ||
-      email.split("@")[0].replace(/[._-]/g, " ");
-
-    const gamerTag =
-      String(body.gamerTag || "").trim() ||
-      name.toLowerCase().replace(/[^a-z0-9]/g, "") ||
-      "oyuncu_tr";
-
-    const [created] = await db
-      .insert(users)
-      .values({
-        name,
-        email,
-        provider,
-        gamerTag,
-        role: "member",
-        downloadsUnlocked: 0,
-        termsAccepted: true,
-        termsAcceptedAt: new Date(),
-      })
-      .returning();
-
-    return NextResponse.json({
-      user: created,
-      isNew: true,
-      message: `Üyeliğin oluşturuldu, hoş geldin ${created.name}!`,
-    });
+    return NextResponse.json(
+      { error: "Geçersiz işlem." },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("POST /api/auth error:", error);
     return NextResponse.json(
@@ -125,10 +225,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/** Profil güncelle (görünen ad / oyuncu etiketi) */
+/** Profil güncelle (isim / oyuncu etiketi / doğum tarihi / cinsiyet) */
 export async function PATCH(request: NextRequest) {
   try {
     await ensureDatabaseSeeded();
+    await ensureUserTableColumns();
     const body = await request.json();
     const email = String(body.email || "").trim().toLowerCase();
 
@@ -137,19 +238,25 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updateData: Record<string, unknown> = {};
+
     if (body.name !== undefined) {
       const n = String(body.name).trim();
       if (!n) {
-        return NextResponse.json(
-          { error: "İsim boş olamaz." },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "İsim boş olamaz." }, { status: 400 });
       }
       updateData.name = n;
     }
     if (body.gamerTag !== undefined) {
       updateData.gamerTag =
         String(body.gamerTag).trim().replace(/\s+/g, "_") || "oyuncu_tr";
+    }
+    if (body.birthDate !== undefined) {
+      updateData.birthDate = String(body.birthDate).trim() || null;
+    }
+    if (body.gender !== undefined) {
+      const g = String(body.gender).trim();
+      updateData.gender =
+        (ALLOWED_GENDERS as readonly string[]).includes(g) ? g : null;
     }
 
     const [updated] = await db
@@ -159,22 +266,16 @@ export async function PATCH(request: NextRequest) {
       .returning();
 
     if (!updated) {
-      return NextResponse.json(
-        { error: "Üyelik bulunamadı." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Üyelik bulunamadı." }, { status: 404 });
     }
 
     return NextResponse.json({
-      user: updated,
+      user: publicUser(updated),
       message: "Profil bilgilerin güncellendi.",
     });
   } catch (error) {
     console.error("PATCH /api/auth error:", error);
-    return NextResponse.json(
-      { error: "Profil güncellenemedi." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Profil güncellenemedi." }, { status: 500 });
   }
 }
 
@@ -204,10 +305,7 @@ export async function DELETE(request: NextRequest) {
       .limit(1);
 
     if (found.length === 0) {
-      return NextResponse.json(
-        { error: "Üyelik bulunamadı." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Üyelik bulunamadı." }, { status: 404 });
     }
 
     if (found[0].role === "admin") {
@@ -226,9 +324,6 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error("DELETE /api/auth error:", error);
-    return NextResponse.json(
-      { error: "Üyelik silinirken hata oluştu." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Üyelik silinirken hata oluştu." }, { status: 500 });
   }
 }

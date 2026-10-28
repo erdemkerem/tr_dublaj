@@ -10,7 +10,6 @@ import {
   Volume2,
   UserCheck,
   LogOut,
-  Settings,
   Sparkles,
 } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
@@ -20,9 +19,8 @@ export function Navbar() {
     itemCount,
     openCart,
     currentUser,
+    openAuthModal,
     logoutUser,
-    isAdmin,
-    openAdminModal,
   } = useStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -39,15 +37,6 @@ export function Navbar() {
               İlk Hazır Oyun: <strong className="text-[#F59E0B]">Resonance: A Plague Tale Legacy</strong> Yayında!
             </span>
           </div>
-          {isAdmin && (
-            <button
-              type="button"
-              onClick={openAdminModal}
-              className="flex items-center gap-1 text-[#F59E0B] hover:underline cursor-pointer font-mono text-[11px]"
-            >
-              <Settings className="w-3.5 h-3.5" /> Yönetim Paneli
-            </button>
-          )}
         </div>
       </div>
 
@@ -85,18 +74,6 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2.5">
-            {/* Yönetim butonu - SADECE SİTE SAHİBİ GÖRÜR */}
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={openAdminModal}
-                className="hidden sm:inline-flex items-center gap-1.5 h-11 px-3.5 rounded-xl bg-[#13151C] hover:bg-[#1C1F2B] text-[#F59E0B] border border-[#F59E0B]/30 hover:border-[#F59E0B]/60 text-xs font-mono font-bold uppercase tracking-wider transition-all cursor-pointer"
-              >
-                <Settings className="w-4 h-4" />
-                <span className="hidden md:inline">Yönetim</span>
-              </button>
-            )}
-
             {/* Giriş yapmış kullanıcı: Hesabım + Çıkış */}
             {currentUser ? (
               <div className="flex items-center gap-1.5 h-11 px-2.5 sm:px-3 rounded-xl bg-[#13151C] border border-[#10B981]/40 text-xs">
@@ -115,6 +92,19 @@ export function Navbar() {
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
+            ) : null}
+
+            {/* Üye girişi yapmamış: Üye Girişi butonu */}
+            {!currentUser ? (
+              <button
+                type="button"
+                onClick={openAuthModal}
+                className="inline-flex items-center gap-2 h-11 px-4 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] text-[#0B0C10] font-display font-bold text-xs uppercase tracking-wider shadow-lg cursor-pointer hover:brightness-110 transition-all"
+              >
+                <UserCheck className="w-4 h-4" />
+                <span className="hidden sm:inline">Üye Girişi</span>
+                <span className="sm:hidden">Üye</span>
+              </button>
             ) : null}
 
             {/* İstek listesi / sepet */}
@@ -148,27 +138,26 @@ export function Navbar() {
               <Link href="/#istek-listesi" onClick={() => setMobileMenuOpen(false)} className="p-3 rounded-lg bg-white/5 text-[#F8FAFC] font-medium">İstek Listesi & Oy Ver</Link>
               <Link href="/#ai-teknolojisi" onClick={() => setMobileMenuOpen(false)} className="p-3 rounded-lg bg-white/5 text-[#F8FAFC] font-medium">AI Sistemi</Link>
               <Link href="/#yorumlar" onClick={() => setMobileMenuOpen(false)} className="p-3 rounded-lg bg-white/5 text-[#F8FAFC] font-medium">Oyuncu Yorumları</Link>
-              {currentUser && (
+              {currentUser ? (
                 <Link href="/hesabim" onClick={() => setMobileMenuOpen(false)} className="col-span-2 p-3 rounded-lg bg-[#10B981]/15 border border-[#10B981]/30 text-[#10B981] font-medium text-center">👤 Hesabım</Link>
-              )}
+              ) : null}
             </div>
             <div className="grid grid-cols-2 gap-2 pt-1">
               {currentUser ? (
                 <button
                   type="button"
                   onClick={() => { setMobileMenuOpen(false); logoutUser(); }}
-                  className="flex items-center justify-center gap-2 py-3 rounded-lg bg-[#EF4444]/15 border border-[#EF4444]/40 text-[#EF4444] text-xs font-bold uppercase"
+                  className="col-span-2 flex items-center justify-center gap-2 py-3 rounded-lg bg-[#EF4444]/15 border border-[#EF4444]/40 text-[#EF4444] text-xs font-bold uppercase"
                 >
                   <LogOut className="w-4 h-4" /> Çıkış Yap
                 </button>
-              ) : null}
-              {isAdmin && (
+              ) : (
                 <button
                   type="button"
-                  onClick={() => { setMobileMenuOpen(false); openAdminModal(); }}
-                  className="flex items-center justify-center gap-2 py-3 rounded-lg bg-[#1C1F2B] border border-[#F59E0B]/40 text-xs font-mono uppercase text-[#F59E0B]"
+                  onClick={() => { setMobileMenuOpen(false); openAuthModal(); }}
+                  className="col-span-2 flex items-center justify-center gap-2 py-3 rounded-lg bg-[#10B981] text-[#0B0C10] text-xs font-bold uppercase"
                 >
-                  <Settings className="w-4 h-4" /> Yönetim
+                  <UserCheck className="w-4 h-4" /> Üye Girişi / Üyelik
                 </button>
               )}
             </div>

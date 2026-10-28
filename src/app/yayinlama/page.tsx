@@ -263,20 +263,8 @@ export default function PublishGuidePage() {
               <span>Gizli Yönetim Adresi</span>
             </div>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Yönetim paneline yalnızca{" "}
-              <Link href="/yonetim" className="text-[#F59E0B] underline">
-                /yonetim
-              </Link>{" "}
-              adresinden ve <code>ADMIN_SECRET_KEY</code> şifrenle girersin.
-              Menüde bu buton başka kimseye görünmez.
+              Yönetim paneline yalnızca sizin bildiğiniz gizli adres ve şifrenizle girilir. Alışveriş sayfasındaki butonlar üyelere hiç görünmez; yamalarla ilgili tüm içerik ekleyip düzenlediğinizde değişikliklar saniyeler içinde aktif olur.
             </p>
-            <Link
-              href="/yonetim"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F59E0B] text-[#0B0C10] font-mono text-xs font-extrabold"
-            >
-              <KeyRound className="w-3.5 h-3.5" />
-              <span>Yönetim Paneline Git</span>
-            </Link>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#13151C] border border-[#10B981]/30 space-y-3">
@@ -286,10 +274,10 @@ export default function PublishGuidePage() {
             </div>
             <ul className="space-y-2 text-xs text-[#94A3B8]">
               {[
-                "Google Drive / GitHub / MediaFire linkleri sayfa kaynağında yer almaz.",
+                "İndirme linkleri sayfa kaynağında yer almaz.",
                 "Linkler sadece üye girişi + indirme adımı sonrası sunucudan gelir.",
                 "Üyeler panele, ekleme/silme işlemlerine asla erişemez.",
-                "Üyelik Google, Yandex ve Proton Mail ile tek tıkla açılır.",
+                "Üyelik e-posta ile tek tıkla açılır.",
               ].map((t) => (
                 <li key={t} className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />

@@ -32,6 +32,8 @@ export function AccountPanel() {
 
   const [displayName, setDisplayName] = useState("");
   const [gamerTag, setGamerTag] = useState("");
+  const [profileBirthDate, setProfileBirthDate] = useState("");
+  const [profileGender, setProfileGender] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Üyelik iptali
@@ -43,6 +45,8 @@ export function AccountPanel() {
     if (currentUser) {
       setDisplayName(currentUser.name);
       setGamerTag(currentUser.gamerTag);
+      setProfileBirthDate(currentUser.birthDate || "");
+      setProfileGender(currentUser.gender || "");
     }
   }, [currentUser]);
 
@@ -58,8 +62,8 @@ export function AccountPanel() {
             Hesabını görmek için giriş yap
           </h1>
           <p className="text-xs text-[#94A3B8] leading-relaxed">
-            Google, Yandex veya Proton Mail ile saniyeler içinde üye ol; indirme
-            geçmişini ve istek listeni buradan yönet.
+            E-postana gelen onay koduyla saniyeler içinde ücretsiz üye ol;
+            indirme geçmişini ve istek listeni buradan yönet.
           </p>
           <button
             type="button"
@@ -91,6 +95,8 @@ export function AccountPanel() {
           email: currentUser.email,
           name: displayName,
           gamerTag,
+          birthDate: profileBirthDate,
+          gender: profileGender,
         }),
       });
       const data = await res.json();
@@ -154,7 +160,7 @@ export function AccountPanel() {
               {currentUser.name}
             </h1>
             <p className="font-mono text-xs text-[#10B981]">
-              @{currentUser.gamerTag} • {currentUser.provider.toUpperCase()} üyesi
+              @{currentUser.gamerTag} • E-posta onaylı üye
             </p>
           </div>
         </div>
@@ -231,6 +237,31 @@ export function AccountPanel() {
                 onChange={(e) => setGamerTag(e.target.value)}
                 className="w-full h-11 px-3.5 rounded-xl bg-[#0B0C10] border border-white/15 font-mono text-xs text-[#F8FAFC] focus:outline-none focus:border-[#10B981]"
               />
+            </div>
+            <div>
+              <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">
+                Doğum Tarihi (opsiyonel)
+              </label>
+              <input
+                type="date"
+                value={profileBirthDate || ""}
+                onChange={(e) => setProfileBirthDate(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl bg-[#0B0C10] border border-white/15 font-mono text-xs text-[#F8FAFC] focus:outline-none focus:border-[#10B981]"
+              />
+            </div>
+            <div>
+              <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">
+                Cinsiyet (opsiyonel)
+              </label>
+              <select
+                value={profileGender || ""}
+                onChange={(e) => setProfileGender(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl bg-[#0B0C10] border border-white/15 text-xs text-[#F8FAFC] focus:outline-none focus:border-[#10B981]"
+              >
+                <option value="">Belirtmek istemiyorum</option>
+                <option value="erkek">Erkek</option>
+                <option value="kadin">Kadın</option>
+              </select>
             </div>
           </div>
 

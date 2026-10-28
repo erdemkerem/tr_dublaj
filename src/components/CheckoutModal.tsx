@@ -33,6 +33,11 @@ export function CheckoutModal() {
   const [memberEmail, setMemberEmail] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  // E-posta onaylı tek üyelik akışı
+  const [checkStep, setCheckStep] = useState<"form" | "code">("form");
+  const [checkCode, setCheckCode] = useState("");
+  const [checkNotice, setCheckNotice] = useState("");
+  const [fallbackCode, setFallbackCode] = useState("");
 
   // Step 2: Ad Click & Countdown state
   const [adClicked, setAdClicked] = useState(false);
@@ -129,53 +134,80 @@ export function CheckoutModal() {
 
   if (!isCheckoutOpen) return null;
 
-  const handleQuickOAuthLogin = async (
-    provider: "google" | "yandex" | "proton"
-  ) => {
+  /** Üyelik onay kodu talebi — e-postaya 6 haneli kod gider */
+  const handleRequestCode = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!termsAccepted) {
       showToast(
         "Devam etmek için Üyelik Sözleşmesi ve KVKK metnini onaylamalısın."
       );
       return;
     }
+    const typed = memberEmail.trim().toLowerCase();
+    if (!typed.includes("@") || !typed.includes(".")) {
+      showToast("Geçerli bir e-posta adresi yaz.");
+      return;
+    }
     setIsLoggingIn(true);
     try {
-      const domain =
-        provider === "google"
-          ? "gmail.com"
-          : provider === "yandex"
-          ? "yandex.com"
-          : "proton.me";
-
-      const typed = memberEmail.trim().toLowerCase();
-      const finalEmail = typed.includes("@")
-        ? typed
-        : `oyuncu${Math.floor(1000 + Math.random() * 9000)}@${domain}`;
-      const finalName =
-        memberName.trim() || finalEmail.split("@")[0].replace(/[._-]/g, " ");
-
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          provider,
-          name: finalName,
-          email: finalEmail,
-          gamerTag:
-            finalName.toLowerCase().replace(/[^a-z0-9]/g, "") || "oyuncu_tr",
+          action: "register",
+          email: typed,
+          name: memberName.trim(),
           termsAccepted: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFallbackCode(data.fallbackCode || "");
+        setCheckNotice(
+          data.mailSent
+            ? `6 haneli onay kodu ${typed} adresine gönderildi.`
+            : "Mail sistemi henüz ayarlanmadığından kodun doğrudan burada gösteriliyor."
+        );
+        setCheckStep("code");
+      } else {
+        showToast(data.error || "Kod gönderilemedi.");
+      }
+    } catch {
+      showToast("Kod gönderilemedi.");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  /** Kodu doğrula → üyelik aktif, indirme adımına geç */
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify",
+          email: memberEmail.trim().toLowerCase(),
+          code: checkCode.trim(),
         }),
       });
       const data = await res.json();
       if (res.ok && data.user) {
         setCurrentUser(data.user);
-        showToast(data.message || "Giriş başarılı!");
+        showToast(
+          data.message || `Hoş geldin ${data.user.name}! Üyeliğin aktif.`
+        );
+        setCheckStep("form");
+        setCheckCode("");
+        setFallbackCode("");
         setStep(2);
       } else {
-        showToast(data.error || "Giriş yapılamadı.");
+        showToast(data.error || "Kod doğrulanamadı.");
       }
     } catch {
-      showToast("Giriş sırasında hata oluştu.");
+      showToast("Kod doğrulanamadı.");
     } finally {
       setIsLoggingIn(false);
     }
@@ -311,101 +343,130 @@ export function CheckoutModal() {
           {step === 1 && (
             <div className="space-y-5">
               <div className="p-4 rounded-xl bg-[#13151C] border border-white/10 text-xs text-[#94A3B8] leading-relaxed">
-                İndirme barındırıcısına yönelmek ve yeni AI dublajlar eklendikçe bildirim almak için hesaplarınızla tek tıkla ücretsiz üye olun.
+                İndirme linklerini açmak için e-posta onaylı ücretsiz üyelik
+                gerekiyor. E-postana gelen 6 haneli kodla saniyeler içinde üye
+                olup devam edebilirsin.
               </div>
 
-              {/* ÜYELİK SÖZLEŞMESİ ONAYI — ZORUNLU */}
-              <label
-                className={`flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all border ${
-                  termsAccepted
-                    ? "bg-[#10B981]/10 border-[#10B981]/40"
-                    : "bg-[#13151C] border-white/15"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={termsAccepted}
-                  onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 shrink-0 accent-[#10B981] cursor-pointer"
-                />
-                <span className="text-xs text-[#94A3B8] leading-relaxed">
-                  <a
-                    href="/sozlesme"
-                    target="_blank"
-                    className="text-[#10B981] underline font-semibold"
-                  >
-                    Üyelik Sözleşmesi
-                  </a>{" "}
-                  ve{" "}
-                  <a
-                    href="/sozlesme#kvkk"
-                    target="_blank"
-                    className="text-[#10B981] underline font-semibold"
-                  >
-                    KVKK Aydınlatma Metni
-                  </a>
-                  &apos;ni okudum, kabul ediyorum. <span className="text-[#EF4444]">*</span>
-                </span>
-              </label>
+              {/* ÜYELİK SÖZLEŞMESİ ONAYI — ZORUNLU (yalnızca yeni üyelik) */}
+                <label
+                  className={`flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all border ${
+                    termsAccepted
+                      ? "bg-[#10B981]/10 border-[#10B981]/40"
+                      : "bg-[#13151C] border-white/15"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 shrink-0 accent-[#10B981] cursor-pointer"
+                  />
+                  <span className="text-xs text-[#94A3B8] leading-relaxed">
+                    <a
+                      href="/sozlesme"
+                      target="_blank"
+                      className="text-[#10B981] underline font-semibold"
+                    >
+                      Üyelik Sözleşmesi
+                    </a>{" "}
+                    ve{" "}
+                    <a
+                      href="/sozlesme#kvkk"
+                      target="_blank"
+                      className="text-[#10B981] underline font-semibold"
+                    >
+                      KVKK Aydınlatma Metni
+                    </a>
+                    &apos;ni okudum, kabul ediyorum. <span className="text-[#EF4444]">*</span>
+                  </span>
+                </label>
 
-              {/* TEK TIKLA GİRİŞ: GOOGLE / YANDEX / PROTON */}
-              <div
-                className={`space-y-2.5 transition-opacity ${
-                  termsAccepted ? "opacity-100" : "opacity-50"
-                }`}
-              >
-                {(
-                  [
-                    { id: "google", label: "Google / Gmail ile Üye Ol", cls: "bg-white text-[#0B0C10]" },
-                    { id: "yandex", label: "Yandex Mail ile Üye Ol", cls: "bg-[#FC3F1D]/20 text-[#FC3F1D] border border-[#FC3F1D]/40" },
-                    { id: "proton", label: "Proton Mail ile Üye Ol", cls: "bg-[#6D4AFF]/20 text-[#A78BFA] border border-[#6D4AFF]/40" },
-                  ] as const
-                ).map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    disabled={isLoggingIn}
-                    onClick={() => handleQuickOAuthLogin(p.id)}
-                    className={`w-full h-12 rounded-xl font-display font-extrabold text-sm flex items-center justify-center gap-3 shadow transition-all cursor-pointer disabled:opacity-60 ${p.cls}`}
-                  >
-                    {isLoggingIn ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <LogIn className="w-5 h-5" />
+                {checkStep === "form" ? (
+                  <form onSubmit={handleRequestCode} className="space-y-3">
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="email"
+                        required
+                        value={memberEmail}
+                        onChange={(e) => setMemberEmail(e.target.value)}
+                        placeholder="E-posta adresin *"
+                        className="w-full h-12 pl-10 pr-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC]"
+                      />
+                    </div>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        required
+                        value={memberName}
+                        onChange={(e) => setMemberName(e.target.value)}
+                        placeholder="İsmin *"
+                        className="w-full h-12 pl-10 pr-3 rounded-xl bg-[#13151C] border border-white/15 text-xs text-[#F8FAFC]"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isLoggingIn}
+                      className="w-full h-12 rounded-xl bg-[#10B981] text-[#0B0C10] font-display font-extrabold text-sm flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60"
+                    >
+                      {isLoggingIn ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <LogIn className="w-5 h-5" />
+                      )}
+                      <span>Onay Kodu Gönder</span>
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyCode} className="space-y-3">
+                    <div className="p-3.5 rounded-xl bg-[#10B981]/10 border border-[#10B981]/30 text-xs text-[#10B981]">
+                      {checkNotice}
+                    </div>
+                    {fallbackCode && (
+                      <div className="p-3.5 rounded-xl bg-[#F59E0B]/10 border border-[#F59E0B]/40 text-center">
+                        <div className="font-mono text-[10px] uppercase text-[#F59E0B] mb-1">
+                          E-posta henüz bağlanmadı — kodun
+                        </div>
+                        <div className="font-mono text-2xl font-extrabold tracking-[6px] text-[#F59E0B]">
+                          {fallbackCode}
+                        </div>
+                      </div>
                     )}
-                    <span>{p.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* İsteğe bağlı bilgiler */}
-              <details className="group pt-3 border-t border-white/10">
-                <summary className="cursor-pointer font-mono text-[11px] uppercase text-[#94A3B8] hover:text-[#F8FAFC] select-none">
-                  İsteğe bağlı: adımı ve e-postamı kendim yazayım ▾
-                </summary>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
-                  <div className="relative">
-                    <User className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
-                      value={memberName}
-                      onChange={(e) => setMemberName(e.target.value)}
-                      className="w-full h-11 pl-10 pr-3 rounded-xl bg-[#13151C] border border-white/15 text-xs text-[#F8FAFC]"
-                      placeholder="Oyuncu adın (boş bırakabilirsin)"
+                      required
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={checkCode}
+                      onChange={(e) =>
+                        setCheckCode(e.target.value.replace(/\D/g, ""))
+                      }
+                      placeholder="______"
+                      className="w-full h-14 px-4 rounded-xl bg-[#13151C] border border-white/15 text-center font-mono text-2xl font-extrabold tracking-[10px] text-[#F8FAFC]"
                     />
-                  </div>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      value={memberEmail}
-                      onChange={(e) => setMemberEmail(e.target.value)}
-                      className="w-full h-11 pl-10 pr-3 rounded-xl bg-[#13151C] border border-white/15 text-xs text-[#F8FAFC]"
-                      placeholder="ornek@gmail.com (boş bırakabilirsin)"
-                    />
-                  </div>
-                </div>
-              </details>
+                    <button
+                      type="submit"
+                      disabled={isLoggingIn}
+                      className="w-full h-12 rounded-xl bg-[#10B981] text-[#0B0C10] font-display font-extrabold text-sm flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60"
+                    >
+                      {isLoggingIn ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-5 h-5" />
+                      )}
+                      <span>Kodu Doğrula & İndirmeye Devam Et</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCheckStep("form")}
+                      className="w-full py-2 font-mono text-[11px] text-[#94A3B8] hover:text-white cursor-pointer"
+                    >
+                      ← E-postayı değiştir / yeni kod iste
+                    </button>
+                  </form>
+                )}
             </div>
           )}
 
