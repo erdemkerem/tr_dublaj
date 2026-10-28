@@ -1,8 +1,9 @@
 /**
  * Basit e-posta göndericisi — Resend API kullanır.
  * Netlify ortam değişkenleri:
- *   RESEND_API_KEY  → https://resend.com/api-keys
- *   MAIL_FROM       → ör. "tr_dublaj <onboarding@resend.dev>" (opsiyonel)
+ *   RESEND_API_KEY   → https://resend.com/api-keys
+ *   MAIL_FROM        → ör. "tr_dublaj <onboarding@resend.dev>" (opsiyonel)
+ *   MAIL_REPLY_TO    → ör. "tr_dublaj@protonmail.com" (opsiyonel; yanıtlar buraya düşer)
  * Anahtar yoksa ileride farklı bir sağlayıcı rahatça bağlanabilir.
  */
 export interface MailResult {
@@ -27,6 +28,7 @@ export async function sendMail(
   }
 
   const from = process.env.MAIL_FROM || "tr_dublaj <onboarding@resend.dev>";
+  const replyTo = process.env.MAIL_REPLY_TO || undefined;
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -35,7 +37,9 @@ export async function sendMail(
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to, subject, html }),
+      body: JSON.stringify(
+        replyTo ? { from, to, subject, html, reply_to: replyTo } : { from, to, subject, html }
+      ),
     });
     if (res.ok) return { sent: true, provider: "resend" };
     const errText = await res.text();
