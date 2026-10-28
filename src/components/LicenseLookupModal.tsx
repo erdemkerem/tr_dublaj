@@ -99,9 +99,7 @@ export function LicenseLookupModal() {
   const [newGithubUrl, setNewGithubUrl] = useState(
     "https://github.com/tr-dublaj/releases"
   );
-  const [newCoverImage, setNewCoverImage] = useState(
-    "/images/resonance-plague-tale.jpg"
-  );
+  const [newCoverImage, setNewCoverImage] = useState("");
   const [newSubtitle, setNewSubtitle] = useState("");
   const [savingPatch, setSavingPatch] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
@@ -761,35 +759,15 @@ export function LicenseLookupModal() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1">
-                            Kapak Görseli
+                            Kapak Görseli URL (GitHub Releases)
                           </label>
-                          <select
+                          <input
+                            type="text"
                             value={newCoverImage}
                             onChange={(e) => setNewCoverImage(e.target.value)}
-                            className="w-full h-10 px-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC]"
-                          >
-                            <option value="/images/resonance-plague-tale.jpg">
-                              Resonance: A Plague Tale Legacy
-                            </option>
-                            <option value="/images/tlou-part1.jpg">
-                              Sinematik Macera / Requiem
-                            </option>
-                            <option value="/images/witcher3-wildhunt.jpg">
-                              Karanlık Ortaçağ / Witcher
-                            </option>
-                            <option value="/images/elden-ring.jpg">
-                              Kadim Tapınak / Elden Ring
-                            </option>
-                            <option value="/images/hero-cyberpunk.jpg">
-                              Bilim-Kurgu / Cyberpunk
-                            </option>
-                            <option value="/images/gow-ragnarok.jpg">
-                              Mitolojik / God of War
-                            </option>
-                            <option value="/images/rdr2-western.jpg">
-                              Vahşi Batı / RDR2
-                            </option>
-                          </select>
+                            placeholder="https://github.com/erdemkerem/tr_dublaj/releases/download/patches-v1/resonance-plague-tale.jpg"
+                            className="w-full h-10 px-3 rounded-xl bg-[#13151C] border border-white/15 font-mono text-xs text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
+                          />
                         </div>
                         <div>
                           <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1">
