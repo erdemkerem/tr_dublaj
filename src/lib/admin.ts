@@ -3,20 +3,36 @@ import type { Product } from "@/db/schema";
 
 export const ADMIN_HEADER = "x-admin-key";
 
+/**
+ * Yönetici anahtarı YALNIZCA Netlify ortam değişkeninden gelir (ADMIN_SECRET_KEY).
+ * Repoda sabit (fallback) anahtar ASLA tutulmaz — depo herkese açık olduğu için
+ * kodda tahminlenebilir bir şifre bırakmak güvenlik açığı olur.
+ */
 export function getAdminSecret(): string {
-  return process.env.ADMIN_SECRET_KEY || "trdublaj-2026-gizli-anahtar";
+  return (process.env.ADMIN_SECRET_KEY || "").trim();
+}
+
+export function approveAdmin(_request: NextRequest): boolean {
+  const secret = getAdminSecret();
+  if (!secret) return false;
+  const headerKey = _request.headers.get(ADMIN_HEADER);
+  return !!headerKey && headerKey.trim() === secret;
 }
 
 /** Yalnızca site sahibi (admin anahtarını bilen) doğrulanır. */
 export function isAdminRequest(request: NextRequest): boolean {
+  const secret = getAdminSecret();
+  if (!secret) return false;
   const headerKey = request.headers.get(ADMIN_HEADER);
   if (!headerKey) return false;
-  return headerKey.trim() === getAdminSecret();
+  return headerKey.trim() === secret;
 }
 
 export function verifyAdminKey(key: string | null | undefined): boolean {
+  const secret = getAdminSecret();
+  if (!secret) return false;
   if (!key) return false;
-  return key.trim() === getAdminSecret();
+  return key.trim() === secret;
 }
 
 /**

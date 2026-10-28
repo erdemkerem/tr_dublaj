@@ -96,7 +96,7 @@ export default function YonetimClient() {
           <div className="p-6 space-y-5">
             <form onSubmit={(e) => { e.preventDefault(); handleKey(); }} className="space-y-4">
               <p className="text-xs text-[#94A3B8] leading-relaxed">
-                Bu panel yalnızca site sahibine açıktır. Anahtar: <strong className="text-[#F8FAFC]">Tezcan5734</strong>
+                Bu panel yalnızca site sahibine açıktır. Anahtar bilgisi şifreli olarak yalnızca sende saklıdır.
               </p>
               <div>
                 <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Yönetici Anahtarı</label>
