@@ -277,12 +277,126 @@ export default function YonetimClient() {
               <textarea name="description" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full p-3.5 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]" />
             </div>
             <div>
-              <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">Galeri Resimleri (JSON)</label>
-              <textarea name="galleryImages" rows={3} value={JSON.stringify(form.galleryImages, null, 2)} onChange={(e) => { try { setForm({ ...form, galleryImages: JSON.parse(e.target.value) }); } catch {} }} placeholder='[{"url":"https://github.com/.../img1.jpg","caption":"Örnek","tag":"ÖNİZLEME"}]' className="w-full p-3.5 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] font-mono focus:outline-none focus:border-[#F59E0B]" />
+              <div className="flex items-center justify-between mb-2">
+                <label className="block font-mono text-[11px] uppercase text-[#94A3B8]">Galeri Resimleri</label>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, galleryImages: [...(form.galleryImages || []), { url: "", caption: "", tag: "ÖNİZLEME" }] })}
+                  className="h-8 px-3 rounded-lg bg-[#10B981]/15 border border-[#10B981]/30 text-[#10B981] font-mono text-[11px] font-bold cursor-pointer hover:bg-[#10B981]/25"
+                >
+                  + Resim Ekle
+                </button>
+              </div>
+              <div className="space-y-2">
+                {(form.galleryImages || []).length === 0 && (
+                  <p className="font-mono text-[11px] text-[#64748B]">Henüz galeri resmi yok. "+ Resim Ekle" ile GitHub Releases resim linklerini ekle.</p>
+                )}
+                {(form.galleryImages || []).map((g, i) => (
+                  <div key={i} className="grid grid-cols-[1fr_1fr_90px_auto] gap-2">
+                    <input
+                      type="text"
+                      value={g.url || ""}
+                      onChange={(e) => {
+                        const next = [...form.galleryImages];
+                        next[i] = { ...next[i], url: e.target.value };
+                        setForm({ ...form, galleryImages: next });
+                      }}
+                      placeholder="https://github.com/erdemkerem/tr_dublaj/releases/download/patches-v1/resim.jpg"
+                      className="w-full h-10 px-3 rounded-xl bg-[#0B0C10] border border-white/15 font-mono text-[11px] text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
+                    />
+                    <input
+                      type="text"
+                      value={g.caption || ""}
+                      onChange={(e) => {
+                        const next = [...form.galleryImages];
+                        next[i] = { ...next[i], caption: e.target.value };
+                        setForm({ ...form, galleryImages: next });
+                      }}
+                      placeholder="Alt yazı / açıklama"
+                      className="w-full h-10 px-3 rounded-xl bg-[#0B0C10] border border-white/15 text-[11px] text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
+                    />
+                    <input
+                      type="text"
+                      value={g.tag || ""}
+                      onChange={(e) => {
+                        const next = [...form.galleryImages];
+                        next[i] = { ...next[i], tag: e.target.value };
+                        setForm({ ...form, galleryImages: next });
+                      }}
+                      placeholder="Etiket"
+                      className="w-full h-10 px-2 rounded-xl bg-[#0B0C10] border border-white/15 text-[11px] text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, galleryImages: form.galleryImages.filter((_, idx) => idx !== i) })}
+                      className="h-10 px-3 rounded-xl bg-[#EF4444]/15 border border-[#EF4444]/30 text-[#EF4444] font-mono text-[11px] font-bold cursor-pointer hover:bg-[#EF4444]/25"
+                    >
+                      Sil
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
             <div>
-              <label className="block font-mono text-[11px] uppercase text-[#94A3B8] mb-1.5">İndirme Linkleri (JSON)</label>
-              <textarea name="hostMirrors" rows={3} value={JSON.stringify(form.hostMirrors, null, 2)} onChange={(e) => { try { setForm({ ...form, hostMirrors: JSON.parse(e.target.value) }); } catch {} }} placeholder='[{"provider":"GitHub Releases","url":"https://github.com/erdemkerem/tr_dublaj/releases/download/patches-v1/resonance.zip","label":"GitHub (2.8 GB)"}]' className="w-full p-3.5 rounded-xl bg-[#0B0C10] border border-white/15 text-sm text-[#F8FAFC] font-mono focus:outline-none focus:border-[#F59E0B]" />
+              <div className="flex items-center justify-between mb-2">
+                <label className="block font-mono text-[11px] uppercase text-[#94A3B8]">İndirme Linkleri (Barındırıcılar)</label>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, hostMirrors: [...(form.hostMirrors || []), { provider: "", url: "", label: "" }] })}
+                  className="h-8 px-3 rounded-lg bg-[#10B981]/15 border border-[#10B981]/30 text-[#10B981] font-mono text-[11px] font-bold cursor-pointer hover:bg-[#10B981]/25"
+                >
+                  + Link Ekle
+                </button>
+              </div>
+              <div className="space-y-2">
+                {(form.hostMirrors || []).length === 0 && (
+                  <p className="font-mono text-[11px] text-[#64748B]">Henüz indirme linki yok. "+ Link Ekle" ile Gofile / GitHub Releases gibi gerçek barındırıcı linklerini ekle.</p>
+                )}
+                {(form.hostMirrors || []).map((m, i) => (
+                  <div key={i} className="grid grid-cols-[140px_1fr_1fr_auto] gap-2">
+                    <input
+                      type="text"
+                      value={m.provider || ""}
+                      onChange={(e) => {
+                        const next = [...form.hostMirrors];
+                        next[i] = { ...next[i], provider: e.target.value };
+                        setForm({ ...form, hostMirrors: next });
+                      }}
+                      placeholder="Barındırıcı (Gofile, GitHub Releases...)"
+                      className="w-full h-10 px-3 rounded-xl bg-[#0B0C10] border border-white/15 text-[11px] text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
+                    />
+                    <input
+                      type="text"
+                      value={m.url || ""}
+                      onChange={(e) => {
+                        const next = [...form.hostMirrors];
+                        next[i] = { ...next[i], url: e.target.value };
+                        setForm({ ...form, hostMirrors: next });
+                      }}
+                      placeholder="https://gofile.io/d/xxxx"
+                      className="w-full h-10 px-3 rounded-xl bg-[#0B0C10] border border-white/15 font-mono text-[11px] text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
+                    />
+                    <input
+                      type="text"
+                      value={m.label || ""}
+                      onChange={(e) => {
+                        const next = [...form.hostMirrors];
+                        next[i] = { ...next[i], label: e.target.value };
+                        setForm({ ...form, hostMirrors: next });
+                      }}
+                      placeholder="Etiket (Gofile • 3.2 GB)"
+                      className="w-full h-10 px-3 rounded-xl bg-[#0B0C10] border border-white/15 text-[11px] text-[#F8FAFC] focus:outline-none focus:border-[#F59E0B]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, hostMirrors: form.hostMirrors.filter((_, idx) => idx !== i) })}
+                      className="h-10 px-3 rounded-xl bg-[#EF4444]/15 border border-[#EF4444]/30 text-[#EF4444] font-mono text-[11px] font-bold cursor-pointer hover:bg-[#EF4444]/25"
+                    >
+                      Sil
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
