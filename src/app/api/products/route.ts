@@ -9,7 +9,6 @@ import {
 } from "@/db/ensure-seed";
 import { eq, sql } from "drizzle-orm";
 import { isAdminRequest, toPublicProducts } from "@/lib/admin";
-import { notifyVerifiedMembersOfNewPatch } from "@/lib/notify";
 
 function slugifyTitle(str: string): string {
   return (
@@ -229,11 +228,6 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // Yeni yama "hazır" olarak yayınlandıysa onaylı üyelere otomatik bildirim
-    if (created.status === "ready") {
-      await notifyVerifiedMembersOfNewPatch(created.gameTitle, created.slug);
-    }
-
     return NextResponse.json({ product: created });
   } catch (error) {
     console.error("POST /api/products error:", error);
@@ -286,16 +280,7 @@ export async function PATCH(request: NextRequest) {
 
     // Admin update fields (status, adShortlinkUrl, hostUrl, version, progressPercent)
     const updateData: Record<string, unknown> = {};
-    let statusRolledToReady = false;
     if (body.status) {
-      const [existingRow] = await db
-        .select()
-        .from(products)
-        .where(eq(products.id, id))
-        .limit(1);
-      if (existingRow && existingRow.status !== "ready" && body.status === "ready") {
-        statusRolledToReady = true;
-      }
       updateData.status = body.status;
       updateData.progressPercent =
         body.status === "ready" ? 100 : Number(body.progressPercent || 65);
@@ -337,10 +322,6 @@ export async function PATCH(request: NextRequest) {
       .set(updateData)
       .where(eq(products.id, id))
       .returning();
-
-    if (statusRolledToReady && updated) {
-      await notifyVerifiedMembersOfNewPatch(updated.gameTitle, updated.slug);
-    }
 
     return NextResponse.json({ product: updated });
   } catch (error) {
