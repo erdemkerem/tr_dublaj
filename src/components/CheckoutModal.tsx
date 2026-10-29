@@ -236,8 +236,8 @@ export function CheckoutModal() {
       ...targetMirrors.map((m) => `- ${m.provider}: ${m.url}`),
       "",
       "KURULUM ADIMLARI:",
-      "1. Yukarıdaki barındırıcı linkinden .zip arşivini indirin.",
-      "2. Arşiv içindeki dosyaları oyun klasörünüze çıkartın.",
+      "1. Yukarıdaki barındırıcı linkinden yama paketini (.7z / .zip arşivi) indirin.",
+      "2. Arşivi 7-Zip veya WinRAR ile oyun klasörünüze çıkartın.",
       "3. Oyuna girip Türkçe AI Dublajın keyfini çıkarın!",
       "==============================================================",
     ].join("\n");
