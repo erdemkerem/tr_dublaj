@@ -222,36 +222,7 @@ export function CheckoutModal() {
 
   const handleRedirectToHost = (provider: string, url: string) => {
     showToast(`${provider} barındırıcısına yönlendiriliyor: ${url}`);
-    // Also download a helper text file containing the direct mirror links & installation steps
-    const content = [
-      "==============================================================",
-      `  tr_dublaj — ${targetTitle} (AI TÜRKÇE DUBLAJ)  `,
-      "==============================================================",
-      `Sürüm      : ${targetVersion} (${targetFileSize})`,
-      `Üye        : ${currentUser?.name || memberName} (${currentUser?.email || memberEmail})`,
-      `Seçilen    : ${provider}`,
-      `Barındırıcı: ${url}`,
-      "",
-      "TÜM BARINDIRICI LİNKLERİ:",
-      ...targetMirrors.map((m) => `- ${m.provider}: ${m.url}`),
-      "",
-      "KURULUM ADIMLARI:",
-      "1. Yukarıdaki barındırıcı linkinden yama paketini (.7z / .zip arşivi) indirin.",
-      "2. Arşivi 7-Zip veya WinRAR ile oyun klasörünüze çıkartın.",
-      "3. Oyuna girip Türkçe AI Dublajın keyfini çıkarın!",
-      "==============================================================",
-    ].join("\n");
-
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = `tr_dublaj_${targetTitle.replace(/[^a-zA-Z0-9]/g, "_")}_Baglanti.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(blobUrl);
-
+    // Not: Sadece barındırıcı sayfası açılır, yanında dosya indirilmez.
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
